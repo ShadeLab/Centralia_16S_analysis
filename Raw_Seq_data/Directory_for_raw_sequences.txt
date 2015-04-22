@@ -1,0 +1,6 @@
+Raw_Sequences are stored at
+
+/mnt/research/ShadeLab/Sequence/raw_sequence/Centralia/Centralia_16Stag/20141230/20141230_A_16S_PE
+and 20141230_B_16S_PE folder
+
+in HPCC ShadeLab folder
