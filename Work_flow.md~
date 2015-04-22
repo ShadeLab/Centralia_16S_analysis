@@ -1,0 +1,10 @@
+# Centralia_16S_analysis
+Community analysis for 16S rRNA Tag-sequencing results using QIIME
+
+# Setup usearch61 into the Qiime/1.9.0
+## Usearch61 copy to root
+> cd /usr/local/bin
+> sudo mv ~/CenQIIMELee/usearch6.1.544_i96linux32 .
+> sudo mv usearch6.1.544_i96linux32 usearch61
+
+
