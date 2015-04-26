@@ -254,6 +254,9 @@ Script: in analysis_script_folder
 ## CCA and RDA plotting
 Script: in analysis_script_folder
 
+## Heatmap
+Script: in analysis_script_folder
+
 ## Network analysis
 Script: in analysis_script_folder
 
