@@ -1,253 +1,469 @@
 # Centralia_16S_analysis
 Community analysis for 16S rRNA Tag-sequencing results using QIIME
 
-# Setup usearch61 into the Qiime/1.9.0
-## Usearch61 copy to root
-1. copy "usearch6.1.544_i96linux32" file into your server
+### Activate qiime 1.9.0 in Amazon EC2 server
+1. http://aws.amazon.com/ec2/?nc2=h_ls
+2. My Account => AWS management console click 
+3. input ID & PW => log in
+4. Click “EC2” in left top side
+5. Click “launch Instances” in the middle of page
+6. Click “Community AMIs” and search “qiime”
+7. Find “qiime-190 - ami-ea2a7682” and click “Select”
+8. Select “General purpose - m3.large” and click “Next” at right below side
+9. Click “Add Storage” at right below side
+10. Change “Size (GiB)” (middle of page) from 10 to 100, and click “Next” at right below side
+11. Enter value as “Qiime_Tutorial” and click “Next” at right below side
+12. Click “Review and Launch”
+13. Click “Launch”
+14. Select “Choose an existing key pair”, if  you already launched ever.
+       If not, choose “Creat a new key pair” and enter the key name.
+15. Click “Download Key Pair”. You can find your key at download folder and copy it on Desktop screen.
+16. Click “Launch Instances”
+17. Click “View Instances”
+18. Open your terminal and enter connect command
+      Command: ssh ubuntu@ec2-52-1-59-136.compute-1.amazonaws.com -i /home/SHLEE/Desktop/Centralia_subsample_A.pem  
+
+### Activate usearch61
+1. copy "usearch6.1.544_i96linux32" and “usearch.236_i86linux32”file into your server
+   Command: scp -i /home/SHLEE/Desktop/Centralia_subsample_A.pem -r /home/SHLEE/Desktop/usearch6.1.544_i96linux32 ubuntu@ec2-52-5-253-18.compute-1.amazonaws.com:/home/ubuntu/Tutorial/
+scp -i /home/SHLEE/Desktop/Centralia_subsample_A.pem -r /home/SHLEE/Desktop/usearch.236_i86linux32 ubuntu@ec2-52-5-253-18.compute-1.amazonaws.com:/home/ubuntu/Tutorial/
 2. cd /usr/local/bin
 3. sudo mv ~/CenQIIMELee/usearch6.1.544_i96linux32
+4. sudo mv ~/CenQIIMELee/usearch.236_i86linux32
 4. sudo mv usearch6.1.544_i96linux32 usearch61
 5. sudo chmod 777 /usr/local/bin/usearch61
 
-## Pandaseq merging
-: pandaseq -f [forward filename] -r [reverse filename] -A simple_bayesian -B -F -g [log filename *.log] -l 253 -L 253 -o 47 -O 47 -t 0.9 -w pandaseq_merged/{outputfilename.fasta}
+### Subsampling using “seqtk”
+Seqtk install 
+1. git clone https://github.com/lh3/seqtk.git
+2. sudo make
+3. sudo cp seqtk /usr/local/bin
+4. ~/mypath/to/seqtk/seqtk 
 
-pandaseq 2.8 <andre@masella.name>
-Usage: pandaseq -f forward.fastq -r reverse.fastq [-6] [-A algorithm:parameters] [-B] [-C filter] [-D threshold] [-F] [-G log.txt.bz2] [-L length] [-N] [-O length] [-T threads] [-U unaligned.txt] [-W output.fasta.bz2] [-a] [-d flags] [-g log.txt] [-h] [-j] [-k kmers] [-l length] [-o length] [-p primer] [-q primer] [-t threshold] [-u unaligned.txt] [-v] [-w output.fasta]
+# Command
+Seqtk sample -s100 [filename].fastq 5000 > [outputfilename].fasta
+-s ??????
 
-	-A 	algorithm: parameters Select the algorithm to use for overlap selection and scoring.
-	-B	Allow unbarcoded sequences (try this for BADID errors).
-	-F	Output FASTQ instead of FASTA.
-	-g log.txt	Output log to a text file.
-	-l length	Minimum length for a sequence.
-	-L length	Maximum length for a sequence.
-	-o length	Minumum overlap region length for a sequence.
-	-O length	Maximum overlap region length for a sequence. (0 to use read length.)
-	-t threshold	The minimum probability that a sequence must have to assemble and, if used, match a primer.
-	-w output.fasta	Output seqences to a FASTA (or FASTQ) file.
+### Merging paired end sequences using Pandaseq
+pandaseq -f C01_05102014_R1_D01_GGAGACAAGGGA_L001_R1_001.fastq.gz -r C01_05102014_R1_D01_GGAGACAAGGGA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/C01_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/C01_05102014_R1_D01.log
+
+pandaseq 2.8 andre@masella.name Usage: pandaseq -f forward.fastq -r reverse.fastq [-6] [-A algorithm:parameters] [-B] [-C filter] [-D threshold] [-F] [-G log.txt.bz2] [-L length] [-N] [-O length] [-T threads] [-U unaligned.txt] [-W output.fasta.bz2] [-a] [-d flags] [-g log.txt] [-h] [-j] [-k kmers] [-l length] [-o length] [-p primer] [-q primer] [-t threshold] [-u unaligned.txt] [-v] [-w output.fasta]
+-A  algorithm: parameters Select the algorithm to use for overlap selection and scoring.
+-B  Allow unbarcoded sequences (try this for BADID errors).
+-F  Output FASTQ instead of FASTA.
+-g log.txt  Output log to a text file.
+-l length   Minimum length for a sequence.
+-L length   Maximum length for a sequence.
+-o length   Minumum overlap region length for a sequence.
+-O length   Maximum overlap region length for a sequence. (0 to use read length.)
+-t threshold    The minimum probability that a sequence must have to assemble and, if used, match a primer.
+-w output.fasta Output seqences to a FASTA (or FASTQ) file.
+
+
 Known algorithms are ea_util, flash, pear, rdp_mle, simple_bayesian, stitch, uparse.
+-For run-
+#C01
+pandaseq -f C01_05102014_R1_D01_GGAGACAAGGGA_L001_R1_001.fastq.gz -r C01_05102014_R1_D01_GGAGACAAGGGA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/C01_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/C01_05102014_R1_D01.log
 
-## Correct mapping file.
+pandaseq -f C01_05102014_R1_D02_AATCAGTCTCGT_L001_R1_001.fastq.gz -r C01_05102014_R1_D02_AATCAGTCTCGT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/C01_05102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/C01_05102014_R1_D02.log
 
-Command
-: validate_mapping_file.py -m Cen_simple_mapping.txt
+pandaseq -f C01_05102014_R1_D03_AATCCGTACAGC_L001_R1_001.fastq.gz -r C01_05102014_R1_D03_AATCCGTACAGC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/C01_05102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/C01_05102014_R1_D03.log
 
-	-m	--mapping_fp; Metadata mapping filepath
+#C02
+pandaseq -f C02_05102014_R1_D01_ACACCTGGTGAT_L001_R1_001.fastq.gz -r C02_05102014_R1_D01_ACACCTGGTGAT_L001_R2_001.fastq.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C02_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C02_05102014_R1_D01.log
+
+pandaseq -f C02_05102014_R1_D02_TATCGTTGACCA_L001_R1_001.fastq.gz -r C02_05102014_R1_D02_TATCGTTGACCA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C02_05102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C02_05102014_R1_D02.log
+
+pandaseq -f C02_05102014_R1_D03_TTACTGTGCGAT_L001_R1_001.fastq.gz -r C02_05102014_R1_D03_TTACTGTGCGAT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C02_05102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C02_05102014_R1_D03.log
+
+#C03
+pandaseq -f C03_05102014_R1_D01_AGGCTACACGAC_L001_R1_001.fastq.gz -r C03_05102014_R1_D01_AGGCTACACGAC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C03_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C03_05102014_R1_D01.log
+
+pandaseq -f C03_05102014_R1_D02_CTAACCTCCGCT_L001_R1_001.fastq.gz -r C03_05102014_R1_D02_CTAACCTCCGCT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C03_05102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C03_05102014_R1_D02.log
+
+pandaseq -f C03_05102014_R1_D03_GAACCAAAGGAT_L001_R1_001.fastq.gz -r C03_05102014_R1_D03_GAACCAAAGGAT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C03_05102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C03_05102014_R1_D02.log
+
+# C04
+pandaseq -f C04_05102014_R1_D01_GTATGCGCTGTA_L001_R1_001.fastq.gz -r C04_05102014_R1_D01_GTATGCGCTGTA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C04_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C04_05102014_R1_D01.log
+
+pandaseq -f C04_05102014_R1_D01_GTATGCGCTGTA_L001_R1_001.fastq.gz -r C04_05102014_R1_D01_GTATGCGCTGTA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C04_05102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C04_05102014_R1_D02.log
+
+pandaseq -f C04_05102014_R1_D03_TCCGACACAATT_L001_R1_001.fastq.gz -r C04_05102014_R1_D03_TCCGACACAATT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C04_05102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C04_05102014_R1_D03.log
+
+#C05
+pandaseq -f C05_05102014_R1_D01_CCAGTGTATGCA_L001_R1_001.fastq.gz -r C05_05102014_R1_D01_CCAGTGTATGCA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C05_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C05_05102014_R1_D01.log
+
+pandaseq -f C05_05102014_R1_D02_CCTCGTTCGACT_L001_R1_001.fastq.gz -r C05_05102014_R1_D02_CCTCGTTCGACT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C05_05102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C05_05102014_R1_D02.log
+
+pandaseq -f C05_05102014_R1_D03_TGAGTCACTGGT_L001_R1_001.fastq.gz -r C05_05102014_R1_D03_TGAGTCACTGGT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C05_05102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C05_05102014_R1_D03.log
+
+# C06
+pandaseq -f C06_05102014_R1_D01_GACTTGGTATTC_L001_R1_001.fastq.gz -r C06_05102014_R1_D01_GACTTGGTATTC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C06_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C06_05102014_R1_D01.log
+
+pandaseq -f C06_05102014_R1_D02_TACACGATCTAC_L001_R1_001.fastq.gz -r C06_05102014_R1_D02_TACACGATCTAC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C06_05102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C06_05102014_R1_D02.log
+
+pandaseq -f C06_05102014_R1_D03_GCACACACGTTA_L001_R1_001.fastq.gz -r C06_05102014_R1_D03_GCACACACGTTA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C06_05102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C06_05102014_R1_D03.log
+
+#C07
+pandaseq -f C07_05102014_R1_D01_CACGCCATAATG_L001_R1_001.fastq.gz -r C07_05102014_R1_D01_CACGCCATAATG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C07_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C07_05102014_R1_D01.log
+
+pandaseq -f C07_05102014_R1_D02_CAGGCGTATTGG_L001_R1_001.fastq.gz -r C07_05102014_R1_D02_CAGGCGTATTGG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C07_05102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C07_05102014_R1_D02.log
+
+pandaseq -f C07_05102014_R1_D03_GGATCGCAGATC_L001_R1_001.fastq.gz -r C07_05102014_R1_D03_GGATCGCAGATC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C07_05102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C07_05102014_R1_D03.log
+
+#C08
+pandaseq -f C08_05102014_R1_D01_GCTGATGAGCTG_L001_R1_001.fastq.gz -r C08_05102014_R1_D01_GCTGATGAGCTG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C08_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C08_05102014_R1_D01.log
+
+pandaseq -f C08_05102014_R1_D02_AGCTGTTGTTTG_L001_R1_001.fastq.gz -r C08_05102014_R1_D02_AGCTGTTGTTTG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C08_05102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C08_05102014_R1_D02.log
+
+pandaseq -f C08_05102014_R1_D03_GGATGGTGTTGC_L001_R1_001.fastq.gz -r C08_05102014_R1_D03_GGATGGTGTTGC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C08_05102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C08_05102014_R1_D03.log
+
+#C09
+pandaseq -f C09_05102014_R2_D04_GCGATATATCGC_L001_R1_001.fastq.gz -r C09_05102014_R2_D04_GCGATATATCGC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C09_05102014_R1_D04.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C09_05102014_R4_D01.log
+
+pandaseq -f C09_05102014_R2_D05_TAGGATTGCTCG_L001_R1_001.fastq.gz -r C09_05102014_R2_D05_TAGGATTGCTCG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C09_05102014_R1_D05.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C09_05102014_R5_D02.log
+
+pandaseq -f C09_05102014_R2_D06_ATGTGCACGACT_L001_R1_001.fastq.gz -r C09_05102014_R2_D06_ATGTGCACGACT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C09_05102014_R1_D06.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C09_05102014_R6_D03.log
+
+#C10
+pandaseq -f C10_05102014_R1_D01_ACGCGCAGATAC_L001_R1_001.fastq.gz -r C10_05102014_R1_D01_ACGCGCAGATAC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C10_05102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C10_05102014_R1_D01.log
+
+pandaseq -f C10_05102014_R1_D02_GACTTTCCCTCG_L001_R1_001.fastq.gz -r C10_05102014_R1_D02_GACTTTCCCTCG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C10_05102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C10_05102014_R1_D02.log
+
+pandaseq -f C10_05102014_R1_D03_ATCCCGAATTTG_L001_R1_001.fastq.gz -r C10_05102014_R1_D03_ATCCCGAATTTG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C10_05102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C10_05102014_R1_D03.log
+
+#C11
+pandaseq -f C11_06102014_R1_D01_GTTGGTCAATCT_L001_R1_001.fastq.gz -r C11_06102014_R1_D01_GTTGGTCAATCT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C11_06102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C11_06102014_R1_D01.log
+
+pandaseq -f C11_06102014_R1_D02_TAGCTCGTAACT_L001_R1_001.fastq.gz -r C11_06102014_R1_D02_TAGCTCGTAACT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C11_06102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C11_06102014_R1_D02.log
+
+pandaseq -f C11_06102014_R1_D03_CAGTGCATATGC_L001_R1_001.fastq.gz -r C11_06102014_R1_D03_CAGTGCATATGC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C11_06102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C11_06102014_R1_D03.log
+
+#C12
+pandaseq -f C12_06102014_R2_D01_TCACGGGAGTTG_L001_R1_001.fastq.gz -r C12_06102014_R2_D01_TCACGGGAGTTG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C12_06102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C12_06102014_R1_D01.log
+
+pandaseq -f C12_06102014_R2_D02_CTGCTAACGCAA_L001_R1_001.fastq.gz -r C12_06102014_R2_D02_CTGCTAACGCAA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C12_06102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C12_06102014_R1_D02.log
+
+pandaseq -f C12_06102014_R2_D03_TTAGGGCTCGTA_L001_R1_001.fastq.gz -r C12_06102014_R2_D03_TTAGGGCTCGTA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C12_06102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C12_06102014_R1_D03.log
+
+#C13
+pandaseq -f C13_06102014_R2_D10_CGCAGCGGTATA_L001_R1_001.fastq.gz -r C13_06102014_R2_D10_CGCAGCGGTATA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C13_06102014_R10_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C13_06102014_R10_D01.log
+
+pandaseq -f C13_06102014_R2_D11_AATGCCTCAACT_L001_R1_001.fastq.gz -r C13_06102014_R2_D11_AATGCCTCAACT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C13_06102014_R11_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C13_06102014_R11_D02.log
+
+pandaseq -f C13_06102014_R2_D12_GGTGTCTATTGT_L001_R1_001.fastq.gz -r C13_06102014_R2_D12_GGTGTCTATTGT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C13_06102014_R12_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C13_06102014_R12_D03.log
+
+#C14
+pandaseq -f C14_06102014_R1_D01_AAGAGATGTCGA_L001_R1_001.fastq.gz -r C14_06102014_R1_D01_AAGAGATGTCGA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C14_06102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C14_06102014_R1_D01.log
+
+pandaseq -f C14_06102014_R1_D02_TCCAAAGTGTTC_L001_R1_001.fastq.gz -r C14_06102014_R1_D02_TCCAAAGTGTTC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C14_06102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C14_06102014_R1_D02.log
+
+pandaseq -f C14_06102014_R1_D03_TACAGATGGCTC_L001_R1_001.fastq.gz -r C14_06102014_R1_D03_TACAGATGGCTC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C14_06102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C14_06102014_R1_D03.log
+
+#C15
+pandaseq -f C15_06102014_R2_D01_ACGTGTACCCAA_L001_R1_001.fastq.gz -r C15_06102014_R2_D01_ACGTGTACCCAA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C15_06102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C15_06102014_R1_D01.log
+
+pandaseq -f C15_06102014_R2_D02_AAGGAGCGCCTT_L001_R1_001.fastq.gz -r C15_06102014_R2_D02_AAGGAGCGCCTT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C15_06102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C15_06102014_R1_D02.log
+
+pandaseq -f C15_06102014_R2_D03_CGATCCGTATTA_L001_R1_001.fastq.gz -r C15_06102014_R2_D03_CGATCCGTATTA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C15_06102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C15_06102014_R1_D03.log
+
+#C16
+pandaseq -f C16_06102014_R1_D01_GTCTAATTCCGA_L001_R1_001.fastq.gz -r C16_06102014_R1_D01_GTCTAATTCCGA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C16_06102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C16_06102014_R1_D01.log
+
+pandaseq -f C16_06102014_R1_D02_TCCGAATTCACA_L001_R1_001.fastq.gz -r C16_06102014_R1_D02_TCCGAATTCACA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C16_06102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C16_06102014_R1_D02.log
+
+pandaseq -f C16_06102014_R1_D03_ACGCCACGAATG_L001_R1_001.fastq.gz -r C16_06102014_R1_D03_ACGCCACGAATG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C16_06102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C16_06102014_R1_D03.log
+
+#C17
+pandaseq -f C17_06102014_R1_D01_GGCCACGTAGTA_L001_R1_001.fastq.gz -r C17_06102014_R1_D01_GGCCACGTAGTA_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C17_06102014_R1_D01.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C17_06102014_R1_D01.log
+
+pandaseq -f C17_06102014_R1_D02_TAGGAACTGGCC_L001_R1_001.fastq.gz -r C17_06102014_R1_D02_TAGGAACTGGCC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C17_06102014_R1_D02.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C17_06102014_R1_D02.log
+
+pandaseq -f C17_06102014_R1_D03_CTAGCGAACATC_L001_R1_001.fastq.gz -r C17_06102014_R1_D03_CTAGCGAACATC_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C17_06102014_R1_D03.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C17_06102014_R1_D03.log
+
+#C18
+pandaseq -f C18_06102014_RE1_D04_GACAGGAGATAG_L001_R1_001.fastq.gz -r C18_06102014_RE1_D04_GACAGGAGATAG_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C18_06102014_R1_D04.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C18_06102014_R1_D01.log
+
+pandaseq -f C18_06102014_RE1_D05_ATTCCTGTGAGT_L001_R1_001.fastq.gz -r C18_06102014_RE1_D05_ATTCCTGTGAGT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C18_06102014_R1_D05.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C18_06102014_R1_D02.log
+
+pandaseq -f C18_06102014_RE1_D06_GAGGCTCATCAT_L001_R1_001.fastq.gz -r C18_06102014_RE1_D06_GAGGCTCATCAT_L001_R2_001.fastq.gz -A simple_bayesian -B -F -w pandaseq_merged_reads/ C18_06102014_R1_D06.fasta -l 253 -L 253 -o 47 -O 47 -t 0.9 -g pandaseq_merged_reads/ C18_06102014_R1_D03.log
+
+### Sequence quality check quality scores (based on PRHED +33) using fastqc
+Command: 
+fastqc C01_05102014_R1_D01.fasta
+fastqc C01_05102014_R1_D02.fasta
+fastqc C01_05102014_R1_D03.fasta
+fastqc C02_05102014_R1_D01.fasta
+fastqc C02_05102014_R1_D02.fasta
+fastqc C02_05102014_R1_D03.fasta
+fastqc C03_05102014_R1_D01.fasta
+fastqc C03_05102014_R1_D02.fasta
+fastqc C03_05102014_R1_D03.fasta
+fastqc C04_05102014_R1_D01.fasta
+fastqc C04_05102014_R1_D02.fasta
+fastqc C04_05102014_R1_D03.fasta
+fastqc C05_05102014_R1_D01.fasta
+fastqc C05_05102014_R1_D02.fasta
+fastqc C05_05102014_R1_D03.fasta
+fastqc C06_05102014_R1_D01.fasta
+fastqc C06_05102014_R1_D02.fasta
+fastqc C06_05102014_R1_D03.fasta
+fastqc C07_05102014_R1_D01.fasta
+fastqc C07_05102014_R1_D02.fasta
+fastqc C07_05102014_R1_D03.fasta
+fastqc C08_05102014_R1_D01.fasta
+fastqc C08_05102014_R1_D02.fasta
+fastqc C08_05102014_R1_D03.fasta
+fastqc C09_05102014_R1_D04.fasta
+fastqc C09_05102014_R1_D05.fasta
+fastqc C09_05102014_R1_D06.fasta
+fastqc C10_05102014_R1_D01.fasta
+fastqc C10_05102014_R1_D02.fasta
+fastqc C10_05102014_R1_D03.fasta
+fastqc C11_06102014_R1_D01.fasta
+fastqc C11_06102014_R1_D02.fasta
+fastqc C11_06102014_R1_D03.fasta
+fastqc C12_06102014_R1_D01.fasta
+fastqc C12_06102014_R1_D02.fasta
+fastqc C12_06102014_R1_D03.fasta
+fastqc C13_06102014_R1_D10.fasta
+fastqc C13_06102014_R1_D11.fasta
+fastqc C13_06102014_R1_D12.fasta
+fastqc C14_06102014_R1_D01.fasta
+fastqc C14_06102014_R1_D02.fasta
+fastqc C14_06102014_R1_D03.fasta
+fastqc C15_06102014_R1_D01.fasta
+fastqc C15_06102014_R1_D02.fasta
+fastqc C15_06102014_R1_D03.fasta
+fastqc C16_06102014_R1_D01.fasta
+fastqc C16_06102014_R1_D02.fasta
+fastqc C16_06102014_R1_D03.fasta
+fastqc C17_06102014_R1_D01.fasta
+fastqc C17_06102014_R1_D02.fasta
+fastqc C17_06102014_R1_D03.fasta
+fastqc C18_06102014_R1_D04.fasta
+fastqc C18_06102014_R1_D05.fasta
+fastqc C18_06102014_R1_D06.fasta
 
 
-## Creat fasta and qual file from subsampled fasta file.
-
-Command
-: convert_fastaqual_fastq.py -f subsampled/[filename]_subsampled.fasta -c fastq_to_fastaqual -o subfastaqual/
-
-	-f, --fasta_file_path; Input FASTA or FASTQ file.
-	-c, --conversion_type
-                   Type of conversion: fastaqual_to_fastq or fastq_to_fastaqual 
-                   [default: fastaqual_to_fastq]
-	-o, --output_dir
-       Output directory. Will be created if does not exist. [default: .]
-
-## Combine all sample sequences and add environmental information to the combined file.
-
-Command
-: add_qiime_labels.py -i subfastaqual/ -m Cen_simple_mapping_corrected.txt -c Description -o AddQiimeLabels/
-
-	-i, --fasta_dirDirectory of fasta files to combine and label.
-	-m, --mapping_fpSampleID to fasta file name mapping file filepath
-	-c, --filename_columnSpecify column used in metadata mapping file for fasta file names.
-	-o, --output_dirRequired output directory for log file and corrected mapping file, log file, and html file. [default: .]
+### Correcting of mapping file.
+Command : validate_mapping_file.py -m Cen_full_mapping.txt   
+-m  --mapping_fp
+          ; Metadata mapping filepath
 
 
-## Check sequence number
+### split fasta and qual file from fastq file.
+Command: convert_fastaqual_fastq.py -f pandaseq_merged_reads/[filename].fasta -c fastq_to_fastaqual -o split_fasta_qual/
+-f, --fasta_file_path; Input FASTA or FASTQ file.
+-c, --conversion_type
+                        Type of conversion: fastaqual_to_fastq or fastq_to_fastaqual 
+                        [default: fastaqual_to_fastq]
+-o, --output_dir
+                        Output directory. Will be created if does not exist. [default: .]
 
-Command
-: count_seqs.py -i AddQiimeLabels/combined_seqs.fna
 
--i, --input_fps
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C01_05102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C01_05102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C01_05102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C02_05102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C02_05102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C02_05102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C03_05102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C03_05102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C03_05102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C04_05102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C04_05102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C04_05102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C05_05102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C05_05102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C05_05102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C06_05102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C06_05102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C06_05102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C07_05102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C07_05102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C07_05102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C08_05102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C08_05102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C08_05102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C09_05102014_R1_D04.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C09_05102014_R1_D05.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C09_05102014_R1_D06.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C10_05102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C10_05102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C10_05102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C11_06102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C11_06102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C11_06102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C12_06102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C12_06102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C12_06102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C13_06102014_R1_D10.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C13_06102014_R1_D11.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C13_06102014_R1_D12.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C14_06102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C14_06102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C14_06102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C15_06102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C15_06102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C15_06102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C16_06102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C16_06102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C16_06102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C17_06102014_R1_D01.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C17_06102014_R1_D02.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C17_06102014_R1_D03.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C18_06102014_R1_D04.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C18_06102014_R1_D05.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+convert_fastaqual_fastq.py -f pandaseq_merged_reads/ C18_06102014_R1_D06.fasta -c fastq_to_fastaqual -o split_fasta_qual/
+
+
+### input the mapping file to the combined file.
+Command: add_qiime_labels.py -i split_fasta_qual/ -m Cen_full_mapping_corrected.txt -c Description -o AddQiimeLabels/
+-i, --fasta_dir
+       Directory of fasta files to combine and label.
+-m, --mapping_fp
+          SampleID to fasta file name mapping file filepath
+-c, --filename_column
+        Specify column used in metadata mapping file for fasta file names.
+-o, --output_dir
+         Required output directory for log file and corrected mapping file, log file, and html file. [default: .]
+
+
+### Check sequence number
+Command : count_seqs.py -i AddQiimeLabels/combined_seqs.fna
+-i, --input_fps 
       The input filepaths (comma-separated)
 
 
-## picking OTUs using open reference algorithm
-
-Command
-: pick_open_reference_otus.py -i AddQiimeLabels/combined_seqs.fna -m usearch61 -o usearch61_openref_prefilter0_90/ -f
-
--i, --input_fpsThe input sequences filepath or comma-separated list of filepaths
--o, --output_dir. The output directory
-
-[OPTIONAL]
--m, --otu_picking_methodThe OTU picking method to use for reference and de novo steps. Passing usearch61, for example, means that usearch61 will be used for the de novo steps and usearch61_ref will be used for reference steps. [default: uclust]
--r, --reference_fpThe reference sequences [default: /Users/jairideout/.virtualenvs/qiime/lib/python2.7/site-packages/qiime_default_reference/gg_13_8_otus/rep_set/97_otus.fasta]
--p, --parameter_fp 
-       Path to the parameter file, which specifies changes to the default behavior. See http://www.qiime.org/documentation/file_formats.html#qiime-parameters . [if omitted, default values will be used]--prefilter_refseqs_fpThe reference sequences to use for the prefilter, if different from the reference sequecnces to use for the OTU picking [default: same as passed for –reference_fp]
--n, --new_ref_set_idUnique identifier for OTUs that get created in this ref set (this is useful to support combining of reference sets) [default:New]-f, --forceForce overwrite of existing output directory (note: existing files in output_dir will not be removed) [default: None]-a, --parallelRun in parallel where available [default: False]
--O, --jobs_to_startNumber of jobs to start. 
-        NOTE: you must also pass -a to run in parallel, this defines the number of jobs to be started if and only if -a is passed [default: 1]
--s, --percent_subsamplePercent of failure sequences to include in the subsample to cluster de novo, expressed as a fraction between 0 and 1 (larger numbers should give more comprehensive results but will be slower) [default:0.001]
---prefilter_percent_idSequences are pre-clustered at this percent id (expressed as a fraction between 0 and 1) against the reference and any reads which fail to hit are discarded (a quality filter); pass 0.0 to disable [default:0.0]
---step1_otu_map_fpReference OTU picking OTU map, to avoid rebuilding if one has already been built. This must be an OTU map generated by this workflow, not (for example) pick_closed_reference_otus.py.
---step1_failures_fasta_fpReference OTU picking failures fasta filepath, to avoid rebuilding if one has already been built. This must be a failures file generated by this workflow, not (for example) pick_closed_reference_otus.py.
---minimum_failure_thresholdThe minimum number of sequences that must fail to hit the reference for subsampling to be performed. If fewer than this number of sequences fail to hit the reference, the de novo clustering step will run serially rather than invoking the subsampled open reference approach to improve performance. [default: 100000]
---suppress_step4Suppress the final de novo OTU picking step (may be necessary for extremely large data sets) [default: False]
---min_otu_sizeThe minimum otu size (in number of sequences) to retain the otu [default: 2]
---suppress_taxonomy_assignmentSkip the taxonomy assignment step, resulting in an OTU table without taxonomy [default: False]
---suppress_align_and_tree
-  Skip the sequence alignment and tree-building steps [default: False]
-
-## Align representative sequences
-
-Command
-: align_seqs.py -i usearch61_openref_prefilter0_90/rep_set.fna -o pynast_aligned/ -e 100
-
-	-i, --input_fasta_fp
-                   Path to the input fasta file
-	-o --output_dir
-                    Path to store result file [default: <ALIGNMENT_METHOD>_aligned]
-	-e --min_length
-                   Minimum sequence length to include in alignment 
-                   [default: 75% of the median input sequence length]
-
-
-## Assign taxonomy to representative sequences
-
-Command
-: assign_taxonomy.py -i usearch61_openref_prefilter0_90/rep_set.fna -m rdp -c 0.8
-
--i, --input_fasta_fp
-      Path to the input fasta file
--c --confidence
-      Minimum confidence to record an assignment, only used for rdp and mothur methods 
-      [default: 0.5]
-
-
-## Make an OTU table, append the assigned taxonomy, and exclude failed alignment OTUs
-
-Commnad
-: biom summarize_table -i usearch61_openref_prefilter0_90/otu_table_mc2_w_tax.biom -o summary_otu_table_mc2_w_tax_biom.txt
+### picking OTUs using open reference algorithm
+Command: pick_open_reference_otus.py -i AddQiimeLabels/combined_seqs.fna -m usearch61 -o usearch61_openref_prefilter0_90/ -f
 
 -i, --input_fps
-      The input sequences filepath or comma-separated list of filepaths
+       The input sequences filepath or comma-separated list of filepaths 
 -o, --output_dir. 
-        The output directory
+       The output directory
+-m, --otu_picking_method
+       The OTU picking method to use for reference and de novo steps. 
+       usearch61, for example, means that usearch61 will be used for the de novo steps and usearch61_ref will be used for reference steps. [default: uclust]
 
-## Rarefaction (subsampling)
-  (Subsample to an equal sequencing depth across all samples (rarefaction) to make a new “even" OTU table)
-
-Command
-: single_rarefaction.py -i usearch61_openref_prefilter0_90/otu_table_mc2_w_tax.biom -o Subsampling_otu_table_even2998.biom -d 2998
-
--i, --input_path
-      Input OTU table filepath.
--o, --output_path
-       Output OTU table filepath.
--d, --depth
-       Number of sequences to subsample per sample.
-
-## Calculating alpha (within-sample) diversity
-
-Command
-: alpha_diversity.py -i Subsampling_otu_table_even2998.biom -m observed_species,PD_whole_tree -o alphadiversity_even73419/subsample_usearch61_alphadiversity_even73419.txt -t rep_set.tre
-
--i, --otu_table_fp
-      The input otu table [REQUIRED]
--m, --mapping_fp
-         Path to the mapping file [REQUIRED]
--o, --output_dir
-        The output directory [REQUIRED]
+### Align representative sequences
+Command: align_seqs.py -i usearch61_openref_prefilter0_90/rep_set.fna -o pynast_aligned/ -e 100
+-i, --input_fasta_fp
+       Path to the input fasta file
+-o --output_dir
+                       Path to store result file [default: <ALIGNMENT_METHOD>_aligned]
+-e --min_length
+                      Minimum sequence length to include in alignment 
+                     [default: 75% of the median input sequence length]
 
 
-## Calculation of Alphadiversity
+### Assign taxonomy to representative sequences
+Command : assign_taxonomy.py -i usearch61_openref_prefilter0_90/rep_set.fna -m rdp -c 0.8
+-i, --input_fasta_fp 
+       Path to the input fasta file 
+-c --confidence Minimum confidence to record an assignment, only used for rdp and mothur methods [default: 0.5]
 
-Command
-: mkdir alphadiversity_even2998
-: alpha_diversity.py -i Subsampling_otu_table_even2998.biom -m observed_species,PD_whole_tree -o alphadiversity_even2998/subsample_usearch61_alphadiversity_even2998.txt -t usearch61_openref_prefilter0_90/rep_set.tre
 
--i, --input_path
+### Make an OTU table, append the assigned taxonomy, and exclude failed alignment OTUs
+Commnad: biom summarize_table -i usearch61_openref_prefilter0_90/otu_table_mc2_w_tax.biom -o summary_otu_table_mc2_w_tax_biom.txt
+-i, --input_fps 
+      The input sequences filepath or comma-separated list of filepaths 
+-o, --output_dir. 
+       The output directory
+
+
+### Rarefaction (subsampling)
+      (Subsample to an equal sequencing depth across all samples (rarefaction) to make a new “even" OTU table)
+Command: single_rarefaction.py -i usearch61_openref_prefilter0_90/otu_table_mc2_w_tax.biom -o Subsampling_otu_table_even2998.biom -d 2998
+-i, --input_path 
+       Input OTU table filepath. 
+-o, --output_path 
+       Output OTU table filepath. 
+-d, --depth 
+        Number of sequences to subsample per sample.
+
+
+### Calculation of Alphadiversity
+Command:
+> mkdir alphadiversity_even2998 
+> alpha_diversity.py -i Subsampling_otu_table_even73419.biom -m observed_species,PD_whole_tree -o alphadiversity_even73419/subsample_usearch61_alphadiversity_even73419.txt  -t usearch61_openref_prefilter0_90/rep_set.tre
+-i, --input_path 
       Input OTU table filepath or input directory containing OTU tables for batch processing. [default: None]
--o, --output_path
-         Output filepath to store alpha diversity metric(s) for each sample in a tab-separated format or output directory when batch processing. [default: None]
+-o, --output_path 
+       Output filepath to store alpha diversity metric(s) for each sample in a tab-separated format or output directory when batch processing. [default: None] 
 -m, --metrics
-         Alpha-diversity metric(s) to use. A comma-separated list should be provided when multiple metrics are specified. [default: PD_whole_tree,chao1,observed_otus]
--t, --tree_path
+         Alpha-diversity metric(s) to use. A comma-separated list should be provided when multiple metrics are specified. [default: PD_whole_tree,chao1,observed_otus] 
+-t, --tree_path 
        Input newick tree filepath. [default: None; REQUIRED for phylogenetic metrics]
 
 
-## make area, and bar chart from subsampled dataset + summary tables for taxonomic level.
+### make area, and bar chart from subsampled dataset + summary tables for taxonomic level.
+Command: summarize_taxa_through_plots.py -o alphadiversity_even73419/taxa_summary73419/ -i Subsampling_otu_table_even73419.biom
 
-Command
-: summarize_taxa_through_plots.py -o alphadiversity_even2998/taxa_summary2998/ -i Subsampling_otu_table_even2998.biom
-
--i, --otu_table_fp
-      The input otu table [REQUIRED]
--o, --output_dir
+-i, --otu_table_fp 
+      The input otu table [REQUIRED] 
+-o, --output_dir 
        The output directory [REQUIRED]
 
 
-## Make resemblance matrices to analyze comparative (beta) diversity
-
-Command
-: beta_diversity.py -i Subsampling_otu_table_even2998.biom -m unweighted_unifrac,weighted_unifrac,binary_sorensen_dice,bray_curtis -o beta_div_even2998/ -t usearch61_openref_prefilter0_90/rep_set.tre
+### Make resemblance matrices to analyze comparative (beta) diversity
+Command: beta_diversity.py -i Subsampling_otu_table_even73419.biom -m unweighted_unifrac,weighted_unifrac,binary_sorensen_dice,bray_curtis -o beta_div_even73419/ -t usearch61_openref_prefilter0_90/rep_set.tre
 
 -i, --input_path
-      Input OTU table in biom format or input directory containing OTU tables in biom format for batch processing.
--m, --metricsBeta-diversity metric(s) to use. A comma-separated list should be provided when multiple metrics are specified. [default: unweighted_unifrac,weighted_unifrac]
--t, --tree_pathInput newick tree filepath, which is required when phylogenetic metrics are specified. [default: None]
+       Input OTU table in biom format or input directory containing OTU tables in biom format for batch processing. 
+-m, --metrics
+        Beta-diversity metric(s) to use. A comma-separated list should be provided when multiple metrics are specified. [default: unweighted_unifrac,weighted_unifrac] 
+-t, --tree_path
+       Input newick tree filepath, which is required when phylogenetic metrics are specified. [default: None]
 
 
-## Creat PCoA plot
+### Creat PCoA plot
+Command: principal_coordinates.py -i beta_div_even73419/ -o beta_div_even73419_PCoA/
 
-Command
-: principal_coordinates.py -i beta_div_even2998/ -o beta_div_even73419_PCoA/
+-i, --input_path Path to the input distance matrix file(s) (i.e., the output from beta_diversity.py). Is a directory for batch processing and a filename for a single file operation. -o, --output_path Output path. Directory for batch processing, filename for single file operation
 
--i, --input_path
-      Path to the input distance matrix file(s) (i.e., the output from beta_diversity.py). Is a directory for batch processing and a filename for a single file operation.
+
+
+Make 2D plot
+Command: make_2d_plots.py -i beta_div_even73419_PCoA/pcoa_weighted_unifrac_Subsampling_otu_table_even73419.txt -m Cen_simple_mapping_corrected.txt -o PCoA_2D_plot/
+-i, --coord_fname 
+      Input principal coordinates filepath (i.e., resulting file from principal_coordinates.py). Alternatively, a directory containing multiple principal coordinates files for jackknifed PCoA results. 
+-m, --map_fname 
+      Input metadata mapping filepath
+
+
+### Creat NMDS plot
+Command: nmds.py -i bray_curtis_otu_table_mc2_w_tax.txt -o BC_coords.txt
+-i, --input_path 
+      Path to the input distance matrix file(s) (i.e., the output from beta_diversity.py). Is a directory for batch processing and a filename for a single file operation. 
 -o, --output_path
-       Output path. Directory for batch processing, filename for single file operation
+        Output path. directory for batch processing, filename for single file operation
 
-## Make 2D plot
 
-Command
-: make_2d_plots.py -i beta_div_even2998_PCoA/pcoa_weighted_unifrac_Subsampling_otu_table_even2998.txt -m Cen_simple_mapping_corrected.txt -o PCoA_2D_plot/
-
--i, --coord_fname
-       Input principal coordinates filepath (i.e., resulting file from principal_coordinates.py). Alternatively, a directory containing multiple principal coordinates files for jackknifed PCoA results.
--m, --map_fname
-         Input metadata mapping filepath
-
-## Creat NMDS plot
-
-Command
-: nmds.py -i bray_curtis_otu_table_mc2_w_tax.txt -o BC_coords.txt
-
--i, --input_path
-      Path to the input distance matrix file(s) (i.e., the output from beta_diversity.py). Is a directory for batch processing and a filename for a single file operation.
+### Convert biom table to txt
+Command : biom convert -i Subsampling_otu_table_even73419.biom -o biom_converted/table.from_biom.txt --table-type "OTU table" --to-tsv
+-i, --input_path 
+      Path to the input distance matrix file(s) 
 -o, --output_path
-       Output path. directory for batch processing, filename for single file operation
-
-## Convert biom table to txt
-
-Command
-: biom convert -i Subsampling_otu_table_even2998.biom -o biom_converted/table.from_biom.txt --table-type "OTU table" --to-tsv
+        Output path. directory for batch processing, filename for single file operation
 
 
-## Averaging replicates
+### Averaging replicates
+Command: collapse_samples.py -b Subsampling_otu_table_even73419.biom -m Cen_simple_mapping_corrected.txt --output_biom_fp collapsed_OTU_table.biom --output_mapping_fp collapsed_map_new_rep.txt --collapse_mode mean --collapse_fields GPS_pt
+-b, --input_biom_fp 
+        The biom table containing the samples to be collapsed 
+-m, --mapping_fp 
+        The sample metdata mapping file 
+      --output_biom_fp 
+        Path where collapsed biom table should be written 
+      --output_mapping_fp 
+              Path where collapsed mapping file should be written 
+        --collapse_fields 
+              Comma-separated list of fields to collapse on
 
-Command
-: collapse_samples.py -b Subsampling_otu_table_even2998.biom -m Cen_simple_mapping_corrected.txt --output_biom_fp collapsed_OTU_table.biom --output_mapping_fp collapsed_map_new_rep.txt --collapse_mode mean --collapse_fields GPS_pt
 
--b, --input_biom_fp
-       The biom table containing the samples to be collapsed
--m, --mapping_fp
-        The sample metdata mapping file
---output_biom_fp
-  Path where collapsed biom table should be written
---output_mapping_fp
-  Path where collapsed mapping file should be written
---collapse_fields
-  Comma-separated list of fields to collapse on
-
-# Analyses using R script
-
+### Analyses using R script
 ## ANOSIM
 Script: in analysis_script_folder
 
@@ -259,4 +475,5 @@ Script: in analysis_script_folder
 
 ## Network analysis
 Script: in analysis_script_folder
+
 
