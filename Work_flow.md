@@ -1,6 +1,50 @@
 # Centralia_16S_analysis
 Community analysis for 16S rRNA Tag-sequencing results using QIIME
 
+### Sampling
+- 18 of Centralia coal mine fire site soil samples
+- Sampling period: 10. 05. 2014 to 10. 06. 2014.
+10. 05. 2014 : C01, C02, C03, C04, C05, C06, C07, C08, C09, and C10.
+10. 06. 2014 : C11, C12, C13, C14, C15, C16, C17, and C18.
+- Collected from 10 cm subsurface (depth)
+- Fire front
+   Fire front 1: C07, C09, C10, C11, C12, C13, C14, C15, C16, and C18.
+   Fire front 2: C01, C02, C03, C04, C05, and C06.
+   Reference: C08, and C17
+- Classification
+   Active vent: C06, C09, C10, C11, C12, C13, and C15.
+   Warm: C14, and C16
+   Recovered: C01, C02, C03, C04, C05, C07 and C18.
+   Reference: C08, and C17
+
+### DNA extraction
+- MoBio PowerSoil DNA Isolation kit
+- 0.25g of soil used
+- DNA concentration (triplicate for each sample = 54 extraction)
+=> C18 = 1/10 diluted
+
+### 16S rDNA tag sequencing
+- Samples
+   C01_D01, C01_D02, C01_D03
+   C02_D01, C02_D02, C02_D03
+   C03_D01, C03_D02, C03_D03
+   C04_D01, C04_D02, C04_D03
+   C05_D01, C05_D02, C05_D03
+   C06_D01, C06_D02, C06_D03
+   C07_D01, C07_D02, C07_D03
+   C08_D01, C08_D02, C08_D03
+   C09_D04, C09_D05, C09_D06
+   C10_D01, C10_D02, C10_D03
+   C11_D01, C11_D02, C11_D03
+   C12_D01, C12_D02, C12_D03
+   C13_D10, C13_D11, C13_D12
+   C14_D01, C14_D02, C14_D03
+   C15_D01, C15_D02, C15_D03
+   C16_D01, C16_D02, C16_D03
+   C17_D01, C17_D02, C17_D03
+   C18_D04, C18_D05, C18_D06
+
+- Sequence analysis
 ### Activate qiime 1.9.0 in Amazon EC2 server
 1. http://aws.amazon.com/ec2/?nc2=h_ls
 2. My Account => AWS management console click 
@@ -464,16 +508,39 @@ Command: collapse_samples.py -b Subsampling_otu_table_even73419.biom -m Cen_simp
 
 
 ### Analyses using R script
-## ANOSIM
-Script: in analysis_script_folder
-
-## CCA and RDA plotting
-Script: in analysis_script_folder
+## T-test
+- Using Sigmaplot
+- input values and select “
 
 ## Heatmap
-Script: in analysis_script_folder
+Script: in GitHub repository (https://github.com/ShadeLab/Centralia_16S_analysis)
+
+## PCoA plot
+Command: principal_coordinates.py -i beta_div_even73419/ -o beta_div_even73419_PCoA/
+Command: make_2d_plots.py -i beta_div_even73419_PCoA/pcoa_weighted_unifrac_Subsampling_otu_table_even73419.txt -m Cen_simple_mapping_corrected.txt -o PCoA_2D_plot/
+
+## Correlation analysis between environmental factors and axis 1, 2
+CCA R script
+
+## ANOSIM
+Script: in GitHub repository (https://github.com/ShadeLab/Centralia_16S_analysis)
+R script
+
+## CCA and RDA plotting
+Script: in GitHub repository (https://github.com/ShadeLab/Centralia_16S_analysis)
+R script
+
+## Heatmap
+Script: in GitHub repository (https://github.com/ShadeLab/Centralia_16S_analysis)
+R script
 
 ## Network analysis
-Script: in analysis_script_folder
+- Used ELSA (Extended Local Similarity Analysis) under linux (Virtual BOX)
+- Homepage: https://bitbucket.org/charade/elsa/wiki/Home 
+- git clone https://bitbucket.org/charade/elsa.git
+- should use rpy2-2.3.10, not most recent version.
+- check datafile (remove special character “\M”)
 
+Command: 
+lsa_compute Cen_OTUs_nosigs_env_L5_converted_ELSA.txt test/ARISA_CenL4.lsa -d 0 -r 1 -s 18 -p perm
 
