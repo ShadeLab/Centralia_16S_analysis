@@ -1,10 +1,10 @@
 ### Install pandaseq onto the QIIME AMI instance ###
-which pandaseq
-git clone http://github.com/neufeld/pandaseq.git/
-cd pandaseq
-./autogen.sh && ./configure && make && sudo make install
-sudo ldconfig
-which pandaseq
+-which pandaseq
+-git clone http://github.com/neufeld/pandaseq.git/
+-cd pandaseq
+-./autogen.sh && ./configure && make && sudo make install
+-sudo ldconfig
+-which pandaseq
 
 ### Merging Forward & reverse 
 mkdir pandaseq_merged_reads
