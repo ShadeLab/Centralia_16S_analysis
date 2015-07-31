@@ -9,7 +9,10 @@
 * which pandaseq
 
 ***
-### Merging Forward & reverse 
+##### For Replicate 1 ###
+***
+***
+### Merging Forward & reverse sequences with Pandaseq ###
 ***
 ```
 mkdir pandaseq_merged_reads
