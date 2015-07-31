@@ -1,4 +1,4 @@
-Install pandaseq onto the QIIME AMI instance
+### Install pandaseq onto the QIIME AMI instance ###
 which pandaseq
 git clone http://github.com/neufeld/pandaseq.git/
 cd pandaseq
@@ -6,6 +6,7 @@ cd pandaseq
 sudo ldconfig
 which pandaseq
 
+### Merging Forward & reverse 
 mkdir pandaseq_merged_reads
 chmod 777 pandaseq_merge.sh
 ./pandaseq_merge.sh
@@ -34,7 +35,7 @@ pick_open_reference_otus.py -i C01.05102014.R1.D01.GGAGACAAGGGA.fasta,C01.051020
 1st result: 77035.0 sequences
 2nd result: 77008.0 sequences
 3rd result:  77118.0 sequences
-For set 1
+## For set 1 ##
 
 biom summarize_table -i usearch61_openref_1st/otu_table_mc2_w_tax.biom -o usearch61_openref_1st/summary_otu_table_mc2_w_tax.txt
 more usearch61_openref_1st/summary_otu_table_mc2_w_tax.txt
