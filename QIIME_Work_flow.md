@@ -324,7 +324,25 @@ make_otu_heatmap.py -i usearch61_openref_1st/Collapsed_sum/even454693/WS_Diversi
 make_otu_heatmap.py -i usearch61_openref_1st/Collapsed_sum/even454693/WS_Diversity_even454693/taxa_summary454693/otu_table_mc2_w_tax_even454693_L6.biom -o usearch61_openref_1st/Collapsed_sum/even454693/WS_Diversity_even454693/taxa_summary454693/heatmap/heatmap_L6_even454693.pdf
 ```
 
+***
+### Make OTU table with taxomony
+***
 
+***
+## For replicate 1
+***
+* Total OTU
+```
+biom convert -i usearch61_openref_1st/otu_table_mc2_w_tax.biom -o usearch61_openref_1st/1st_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Average OTU
+```
+biom convert -i usearch61_openref_1st/even77008/otu_table_mc2_w_tax_even77008.biom -o usearch61_openref_1st/even77008/1st_biom_converted_OTU_table_w_tax_even77008.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Collapsed_sum
+```
+biom convert -i usearch61_openref_1st/even454693/otu_table_mc2_w_tax_even454693.biom -o usearch61_openref_1st/even454693/1st_biom_converted_OTU_table_w_tax_even454693.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
 
 
 
@@ -610,6 +628,58 @@ make_otu_heatmap.py -i usearch61_openref_2nd/Collapsed_sum/even455113/WS_Diversi
 make_otu_heatmap.py -i usearch61_openref_2nd/Collapsed_sum/even455113/WS_Diversity_even455113/taxa_summary455113/otu_table_mc2_w_tax_even455113_L6.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/WS_Diversity_even455113/taxa_summary455113/heatmap/heatmap_L6_even455113.pdf
 ```
 
+***
+### Make OTU table with taxomony
+***
+
+***
+## For replicate 1
+***
+* Total OTU
+```
+biom convert -i usearch61_openref_1st/otu_table_mc2_w_tax.biom -o usearch61_openref_1st/1st_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Average OTU
+```
+biom convert -i usearch61_openref_1st/even77008/otu_table_mc2_w_tax_even77008.biom -o usearch61_openref_1st/even77008/1st_biom_converted_OTU_table_w_tax_even77008.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Collapsed_sum
+```
+biom convert -i usearch61_openref_1st/even454693/otu_table_mc2_w_tax_even454693.biom -o usearch61_openref_1st/even454693/1st_biom_converted_OTU_table_w_tax_even454693.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+
+***
+## For replicate 2
+***
+* Total OTU
+```
+biom convert -i usearch61_openref_2nd/otu_table_mc2_w_tax.biom -o usearch61_openref_2nd/2nd_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Average OTU
+```
+biom convert -i usearch61_openref_2nd/even77035/otu_table_mc2_w_tax_even77035.biom -o usearch61_openref_2nd/even77035/2nd_biom_converted_OTU_table_w_tax_even77035.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Collapsed_sum
+```
+biom convert -i usearch61_openref_2nd/Collapsed_sum/even455113/otu_table_mc2_w_tax_even455113.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/2nd_biom_converted_OTU_table_w_tax_even455113.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+***
+### Make OTU table with taxomony
+***
+
+## For replicate 2
+* Total OTU
+```
+biom convert -i usearch61_openref_2nd/otu_table_mc2_w_tax.biom -o usearch61_openref_2nd/2nd_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Average OTU
+```
+biom convert -i usearch61_openref_2nd/even77035/otu_table_mc2_w_tax_even77035.biom -o usearch61_openref_2nd/even77035/2nd_biom_converted_OTU_table_w_tax_even77035.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Collapsed_sum
+```
+biom convert -i usearch61_openref_2nd/Collapsed_sum/even455113/otu_table_mc2_w_tax_even455113.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/2nd_biom_converted_OTU_table_w_tax_even455113.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
 
 
 ***
@@ -898,41 +968,7 @@ make_otu_heatmap.py -i usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversi
 ### Make OTU table with taxomony
 ***
 
-***
-## For replicate 1
-***
-* Total OTU
-```
-biom convert -i usearch61_openref_1st/otu_table_mc2_w_tax.biom -o usearch61_openref_1st/1st_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-```
-* Average OTU
-```
-biom convert -i usearch61_openref_1st/even77008/otu_table_mc2_w_tax_even77008.biom -o usearch61_openref_1st/even77008/1st_biom_converted_OTU_table_w_tax_even77008.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-```
-* Collapsed_sum
-```
-biom convert -i usearch61_openref_1st/even454693/otu_table_mc2_w_tax_even454693.biom -o usearch61_openref_1st/even454693/1st_biom_converted_OTU_table_w_tax_even454693.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-```
-
-***
-## For replicate 2
-***
-* Total OTU
-```
-biom convert -i usearch61_openref_2nd/otu_table_mc2_w_tax.biom -o usearch61_openref_2nd/2nd_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-```
-* Average OTU
-```
-biom convert -i usearch61_openref_2nd/even77035/otu_table_mc2_w_tax_even77035.biom -o usearch61_openref_2nd/even77035/2nd_biom_converted_OTU_table_w_tax_even77035.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-```
-* Collapsed_sum
-```
-biom convert -i usearch61_openref_2nd/Collapsed_sum/even455113/otu_table_mc2_w_tax_even455113.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/2nd_biom_converted_OTU_table_w_tax_even455113.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-```
-
-***
 ## For replicate 3
-***
 * Total OTU
 ```
 biom convert -i usearch61_openref_3rd/otu_table_mc2_w_tax.biom -o usearch61_openref_3rd/3rd_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
@@ -945,6 +981,8 @@ biom convert -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.bi
 ```
 biom convert -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/3rd_biom_converted_OTU_table_w_tax_even455229.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
 ```
+
+
 
 ***
 ### Other analysis
