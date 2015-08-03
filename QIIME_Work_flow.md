@@ -254,7 +254,7 @@ summarize_taxa_through_plots.py -o usearch61_openref_1st/Collapsed_sum/even45469
 
 * Creat Rarefaction curves
 ```
-alpha_rarefaction.py -i usearch61_openref_1st/Collapsed_sum/even454693/otu_table_mc2_w_tax_even454693.biom -o usearch61_openref_1st/Collapsed_sum/even454693/rarefaction_curve/ -t usearch61_openref_1st/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 100
+alpha_rarefaction.py -i usearch61_openref_1st/Collapsed_sum/even454693/otu_table_mc2_w_tax_even454693.biom -o usearch61_openref_1st/Collapsed_sum/even454693/rarefaction_curve/ -t usearch61_openref_1st/rep_set.tre -m ../MappingFiles/Centralia_Collapsed_Map.txt -e 100
 ```
 
 ***
@@ -555,7 +555,7 @@ summarize_taxa_through_plots.py -o usearch61_openref_2nd/Collapsed_sum/even45511
 
 * Creat Rarefaction curves
 ```
-alpha_rarefaction.py -i usearch61_openref_2nd/Collapsed_sum/even455113/otu_table_mc2_w_tax_even455113.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/rarefaction_curve/ -t usearch61_openref_2nd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 100
+alpha_rarefaction.py -i usearch61_openref_2nd/Collapsed_sum/even455113/otu_table_mc2_w_tax_even455113.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/rarefaction_curve/ -t usearch61_openref_2nd/rep_set.tre -m ../MappingFiles/Centralia_Collapsed_Map.txt -e 100
 ```
 
 ***
@@ -888,10 +888,10 @@ summarize_taxa_through_plots.py -o usearch61_openref_3rd/Collapsed_sum/even45522
 ```
 
 *** 
-Rarefaction curves 
+# Creat Rarefaction curves 
 ***
 ```
-alpha_rarefaction.py -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/rarefaction_curve/ -t usearch61_openref_3rd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 10000
+alpha_rarefaction.py -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/rarefaction_curve/ -t usearch61_openref_3rd/rep_set.tre -m ../MappingFiles/Centralia_Collapsed_Map.txt -e 10000
 ```
 
 ***
