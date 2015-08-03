@@ -945,3 +945,43 @@ biom convert -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.bi
 ```
 biom convert -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/3rd_biom_converted_OTU_table_w_tax_even455229.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
 ```
+
+***
+### Other analysis
+***
+***
+## Correlation analysis between environmental factors and axis 1, 2
+***
+CCA R script
+
+***
+## ANOSIM
+***
+Script: in GitHub repository (https://github.com/ShadeLab/Centralia_16S_analysis)
+R script
+
+***
+## CCA and RDA plotting
+***
+Script: in GitHub repository (https://github.com/ShadeLab/Centralia_16S_analysis)
+R script
+
+***
+## Heatmap
+***
+Script: in GitHub repository (https://github.com/ShadeLab/Centralia_16S_analysis)
+R script
+
+***
+## Network analysis
+***
+1. Used ELSA (Extended Local Similarity Analysis) under linux (Virtual BOX)
+2. Homepage: https://bitbucket.org/charade/elsa/wiki/Home 
+3. git clone https://bitbucket.org/charade/elsa.git
+4. should use rpy2-2.3.10, not most recent version.
+5. check datafile (remove special character “\M”)
+
+Command:
+```
+lsa_compute Cen_OTUs_nosigs_env_L5_converted_ELSA.txt test/ARISA_CenL4.lsa -d 0 -r 1 -s 18 -p perm
+```
