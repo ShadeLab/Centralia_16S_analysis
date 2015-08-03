@@ -121,7 +121,7 @@ head usearch61_openref_2nd/even77008/WS_Diversity_even77008/WS_Diversity_even770
 summarize_taxa_through_plots.py -o usearch61_openref_2nd/even77008/WS_Diversity_even77008/taxa_summary77008/ -i usearch61_openref_2nd/even77008/otu_table_mc2_w_tax_even77008.biom
 ```
 
-* Creat Rarefaction curves
+# Create Rarefaction curves
 ```
 alpha_rarefaction.py -i usearch61_openref_1st/even77008/otu_table_mc2_w_tax_even77008.biom -o usearch61_openref_1st/even77008/rarefaction_curve/ -t usearch61_openref_2nd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 10000
 ```
@@ -252,9 +252,9 @@ more usearch61_openref_1st/Collapsed_sum/even454693/WS_Diversity_even454693/WS_D
 summarize_taxa_through_plots.py -o usearch61_openref_1st/Collapsed_sum/even454693/WS_Diversity_even454693/taxa_summary454693/ -i usearch61_openref_1st/Collapsed_sum/even454693/otu_table_mc2_w_tax_even454693.biom
 ```
 
-* Creat Rarefaction curves
+# Create Rarefaction curves
 ```
-alpha_rarefaction.py -i usearch61_openref_1st/Collapsed_sum/even454693/otu_table_mc2_w_tax_even454693.biom -o usearch61_openref_1st/Collapsed_sum/even454693/rarefaction_curve/ -t usearch61_openref_1st/rep_set.tre -m ../MappingFiles/Centralia_Collapsed_Map.txt -e 100
+alpha_rarefaction.py -i usearch61_openref_1st/Collapsed_sum/even454693/otu_table_mc2_w_tax_even454693.biom -o usearch61_openref_1st/Collapsed_sum/even454693/rarefaction_curve/ -t usearch61_openref_1st/rep_set.tre -m ../MappingFiles/Centralia_Collapsed_Map.txt -e 10000
 ```
 
 ***
@@ -430,9 +430,9 @@ head usearch61_openref_2nd/even77035/WS_Diversity_even77035/WS_Diversity_even770
 summarize_taxa_through_plots.py -o usearch61_openref_2nd/even77035/WS_Diversity_even77035/taxa_summary77035/ -i usearch61_openref_2nd/even77035/otu_table_mc2_w_tax_even77035.biom
 ```
 
-* Creat Rarefaction curves
+# Create Rarefaction curves
 ```
-alpha_rarefaction.py -i usearch61_openref_2nd/even77035/otu_table_mc2_w_tax_even77035.biom -o usearch61_openref_2nd/even77035/rarefaction_curve/ -t usearch61_openref_2nd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 100
+alpha_rarefaction.py -i usearch61_openref_2nd/even77035/otu_table_mc2_w_tax_even77035.biom -o usearch61_openref_2nd/even77035/rarefaction_curve/ -t usearch61_openref_2nd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 10000
 ```
 
 ***
@@ -553,9 +553,9 @@ more usearch61_openref_2nd/Collapsed_sum/even455113/WS_Diversity_even455113/WS_D
 summarize_taxa_through_plots.py -o usearch61_openref_2nd/Collapsed_sum/even455113/WS_Diversity_even455113/taxa_summary455113/ -i usearch61_openref_2nd/Collapsed_sum/even455113/otu_table_mc2_w_tax_even455113.biom
 ```
 
-* Creat Rarefaction curves
+# Create Rarefaction curves
 ```
-alpha_rarefaction.py -i usearch61_openref_2nd/Collapsed_sum/even455113/otu_table_mc2_w_tax_even455113.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/rarefaction_curve/ -t usearch61_openref_2nd/rep_set.tre -m ../MappingFiles/Centralia_Collapsed_Map.txt -e 100
+alpha_rarefaction.py -i usearch61_openref_2nd/Collapsed_sum/even455113/otu_table_mc2_w_tax_even455113.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/rarefaction_curve/ -t usearch61_openref_2nd/rep_set.tre -m ../MappingFiles/Centralia_Collapsed_Map.txt -e 10000
 ```
 
 ***
@@ -767,9 +767,9 @@ Visualizing within-sample diversity
 summarize_taxa_through_plots.py -o usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/ -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom
 ```
 
-* Rarefaction curves
+# Create Rarefaction curves
 ```
-alpha_rarefaction.py -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom -o usearch61_openref_3rd/even77118/rarefaction_curve/ -t usearch61_openref_3rd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 100
+alpha_rarefaction.py -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom -o usearch61_openref_3rd/even77118/rarefaction_curve/ -t usearch61_openref_3rd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 10000
 ```
 ```
 Make resemblance matrices to analyze comparative (beta) diversity
@@ -888,7 +888,7 @@ summarize_taxa_through_plots.py -o usearch61_openref_3rd/Collapsed_sum/even45522
 ```
 
 *** 
-# Creat Rarefaction curves 
+# Create Rarefaction curves 
 ***
 ```
 alpha_rarefaction.py -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/rarefaction_curve/ -t usearch61_openref_3rd/rep_set.tre -m ../MappingFiles/Centralia_Collapsed_Map.txt -e 10000
