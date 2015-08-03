@@ -949,10 +949,6 @@ biom convert -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_t
 ***
 ### Other analysis
 ***
-***
-## Correlation analysis between environmental factors and axis 1, 2
-***
-CCA R script
 
 ***
 ## ANOSIM
@@ -961,7 +957,7 @@ Script: in GitHub repository (https://github.com/ShadeLab/Centralia_16S_analysis
 R script
 
 ***
-## CCA and RDA plotting
+## CCA and RDA plotting & Correlation analysis between environmental factors and axis 1, 2
 ***
 Script: in GitHub repository (https://github.com/ShadeLab/Centralia_16S_analysis)
 R script
