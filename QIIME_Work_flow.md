@@ -480,10 +480,6 @@ make_otu_heatmap.py -i usearch61_openref_2nd/even77035/WS_Diversity_even77035/ta
 ```
 
 ***
-### For Collapsed replicate samples based on Sum for analysis 2
-***
-
-***
 ## For Collapsed replicate samples based on Sum for analysis 2
 ***
 ```
@@ -608,6 +604,8 @@ make_otu_heatmap.py -i usearch61_openref_2nd/Collapsed_sum/even455113/WS_Diversi
 make_otu_heatmap.py -i usearch61_openref_2nd/Collapsed_sum/even455113/WS_Diversity_even455113/taxa_summary455113/otu_table_mc2_w_tax_even455113_L6.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/WS_Diversity_even455113/taxa_summary455113/heatmap/heatmap_L6_even455113.pdf
 ```
 
+
+
 ***
 ### For Replicate 3 data analysis ###
 ***
@@ -657,162 +655,287 @@ biom summarize_table -i usearch61_openref_3rd/otu_table_mc2_w_tax.biom -o usearc
 more usearch61_openref_3rd/summary_otu_table_mc2_w_tax.txt
 ```
 
-
+***
 Rarefaction (subsampling)
+***
+```
 mkdir usearch61_openref_3rd/even77118/
-
+```
+```
 single_rarefaction.py -i usearch61_openref_3rd/otu_table_mc2_w_tax.biom -o usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom -d 77118
-
+```
+```
 biom summarize_table -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom -o usearch61_openref_3rd/even77118/summary_otu_table_mc2_w_tax_even77118.txt
-
+```
+```
 more usearch61_openref_3rd/even77118/summary_otu_table_mc2_w_tax_even77118.txt
+```
 
+***
 Calculating within-sample (alpha) diversity
-Navigate back into the usearch61_openref/ directory, and make a new directory for alpha diversity results.
+***
+```
 mkdir usearch61_openref_3rd/even77118/WS_Diversity_even77118/ 
-
+```
+```
 alpha_diversity.py -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom -m observed_species,PD_whole_tree -o usearch61_openref_3rd/even77118/WS_Diversity_even77118/WS_Diversity_even77118.txt -t usearch61_openref_3rd/rep_set.tre
-
+```
+```
 head usearch61_openref_3rd/even77118/WS_Diversity_even77118/WS_Diversity_even77118.txt
+```
 
+***
 Visualizing within-sample diversity
+***
+```
 summarize_taxa_through_plots.py -o usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/ -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom
+```
 
-*** Rarefaction curves ***
+* Rarefaction curves
+```
 alpha_rarefaction.py -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom -o usearch61_openref_3rd/even77118/rarefaction_curve/ -t usearch61_openref_3rd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 100
-
+```
+```
 Make resemblance matrices to analyze comparative (beta) diversity
 beta_diversity.py -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom -m unweighted_unifrac,weighted_unifrac,binary_sorensen_dice,bray_curtis -o usearch61_openref_3rd/even77118/compar_div_even77118/ -t usearch61_openref_3rd/rep_set.tre
+```
 
-
-Using QIIME for visualization: Ordination
+***
+Using QIIME for visualization: Ordination (PCoA)
+***
+```
 mkdir usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/
-
+```
+```
 principal_coordinates.py -i usearch61_openref_3rd/even77118/compar_div_even77118/ -o usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/
-
+```
+```
 make_2d_plots.py -i usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/pcoa_weighted_unifrac_otu_table_mc2_w_tax_even77118.txt -m ../MappingFiles/Centralia_Full_Map.txt -o usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/PCoA_2D_plot_Weighted_Unifrac/
-
+```
+```
 make_2d_plots.py -i usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/pcoa_unweighted_unifrac_otu_table_mc2_w_tax_even77118.txt -m ../MappingFiles/Centralia_Full_Map.txt -o usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/PCoA_2D_plot_Unweighted_Unifrac/
-
+```
+```
 make_2d_plots.py -i usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/pcoa_binary_sorensen_dice_otu_table_mc2_w_tax_even77118.txt -m ../MappingFiles/Centralia_Full_Map.txt -o usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/PCoA_2D_plot_sorensen/
-
+```
+```
 make_2d_plots.py -i usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/pcoa_bray_curtis_otu_table_mc2_w_tax_even77118.txt -m ../MappingFiles/Centralia_Full_Map.txt -o usearch61_openref_3rd/even77118/compar_div_even77118_PCoA/PCoA_2D_plot_Bray_Curtis/
+```
 
-
-NMS plots
+***
+Using QIIME for visualization: Ordination (NMS plots)
+***
+```
 mkdir usearch61_openref_3rd/even77118/NMDS_Plot
-
+```
+```
 nmds.py -i usearch61_openref_3rd/even77118/compar_div_even77118/bray_curtis_otu_table_mc2_w_tax_even77118.txt -o usearch61_openref_3rd/even77118/NMDS_Plot/mc2_even77118_braycurtis_NMDS_coords.txt
-
+```
+```
 nmds.py -i usearch61_openref_3rd/even77118/compar_div_even77118/ binary_sorensen_dice_otu_table_mc2_w_tax_even77118.txt -o usearch61_openref_3rd/even77118/NMDS_Plot/mc2_even77118_sorenson_NMDS_coords.txt
-
+```
+```
 nmds.py -i usearch61_openref_3rd/even77118/compar_div_even77118/ unweighted_unifrac_otu_table_mc2_w_tax_even77118.txt -o usearch61_openref_3rd/even77118/NMDS_Plot/mc2_even77118_UWunifrac_NMDS_coords.txt
-
+```
+```
 nmds.py -i usearch61_openref_3rd/even77118/compar_div_even77118/ weighted_unifrac_otu_table_mc2_w_tax_even77118.txt -o usearch61_openref_3rd/even77118/NMDS_Plot/mc2_even77118_Wunifrac_NMDS_coords.txt
+```
 
+***
 Make heatmap
-
+***
+```
 mkdir usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/heatmap/
-
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/otu_table_mc2_w_tax_even77118_L2.biom -o usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/heatmap/heatmap_L2_even77118.pdf
-
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/otu_table_mc2_w_tax_even77118_L3.biom -o usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/heatmap/heatmap_L3_even77118.pdf
-
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/otu_table_mc2_w_tax_even77118_L4.biom -o usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/heatmap/heatmap_L4_even77118.pdf
-
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/otu_table_mc2_w_tax_even77118_L5.biom -o usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/heatmap/heatmap_L5_even77118.pdf
-
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/otu_table_mc2_w_tax_even77118_L6.biom -o usearch61_openref_3rd/even77118/WS_Diversity_even77118/taxa_summary77118/heatmap/heatmap_L6_even77118.pdf
+```
 
- 
-Collapsed replicates based on Sum
+***
+## For Collapsed replicate samples based on Sum for analysis 3
+***
+```
 mkdir usearch61_openref_3rd/Collapsed_sum/
+```
+```
 collapse_samples.py -b usearch61_openref_3rd/otu_table_mc2_w_tax.biom -m ../MappingFiles/Centralia_Full_Map.txt --output_biom_fp usearch61_openref_3rd/Collapsed_sum/collapsed_OTU_table.biom --output_mapping_fp usearch61_openref_3rd/Collapsed_sum/collapsed_map_new_rep.txt --collapse_mode sum --collapse_fields GPS_pt
-
+```
+```
 biom summarize_table -i usearch61_openref_3rd/Collapsed_sum/collapsed_OTU_table.biom -o usearch61_openref_3rd/Collapsed_sum/summary_collapsed_OTU_table.biom
 more usearch61_openref_3rd/Collapsed_sum/summary_collapsed_OTU_table.biom
-Min: 455229 seqs
+```
 
+***
 Rarefaction (subsampling)
+***
+```
 mkdir usearch61_openref_3rd/Collapsed_sum/even455229/
+```
+```
 single_rarefaction.py -i usearch61_openref_3rd/Collapsed_sum/collapsed_OTU_table.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -d 455229
+```
+```
 biom summarize_table -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/summary_otu_table_mc2_w_tax_even455229.txt
 more usearch61_openref_3rd/Collapsed_sum/even455229/summary_otu_table_mc2_w_tax_even455229.txt
+```
 
-
+***
 Calculating within-sample (alpha) diversity
-Navigate back into the usearch61_openref/ directory, and make a new directory for alpha diversity results.
+***
+```
 mkdir usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/ 
+```
+```
 alpha_diversity.py -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -m observed_species,PD_whole_tree -o usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/WS_Diversity_455229.txt -t usearch61_openref_3rd/rep_set.tre
+```
+```
 more usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/WS_Diversity_455229.txt
+```
 
+***
 Visualizing within-sample diversity
+***
+```
 summarize_taxa_through_plots.py -o usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/ -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom
+```
 
-*** Rarefaction curves ***
-alpha_rarefaction.py -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/rarefaction_curve/ -t usearch61_openref_3rd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 100
+*** 
+Rarefaction curves 
+***
+```
+alpha_rarefaction.py -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/rarefaction_curve/ -t usearch61_openref_3rd/rep_set.tre -m ../MappingFiles/Centralia_Full_Map.txt -e 10000
+```
 
-
+***
 Make resemblance matrices to analyze comparative (beta) diversity
+***
+```
 beta_diversity.py -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -m unweighted_unifrac,weighted_unifrac,binary_sorensen_dice,bray_curtis -o usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229/ -t usearch61_openref_3rd/rep_set.tre
+```
 
-
-Using QIIME for visualization: Ordination
+***
+Using QIIME for visualization: Ordination (PCoA)
+***
+```
 mkdir usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/
-
+```
+```
 principal_coordinates.py -i usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229/ -o usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/
-
+```
+```
 make_2d_plots.py -i usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/pcoa_weighted_unifrac_otu_table_mc2_w_tax_even455229.txt -m usearch61_openref_3rd/Collapsed_sum/collapsed_map_new_rep.txt -o usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/PCoA_2D_plot_Weighted_Unifrac/
-
+```
+```
 make_2d_plots.py -i usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/pcoa_unweighted_unifrac_otu_table_mc2_w_tax_even455229.txt -m usearch61_openref_3rd/Collapsed_sum/collapsed_map_new_rep.txt -o usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/PCoA_2D_plot_Unweighted_Unifrac/
-
+```
+```
 make_2d_plots.py -i usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/pcoa_binary_sorensen_dice_otu_table_mc2_w_tax_even455229.txt -m usearch61_openref_3rd/Collapsed_sum/collapsed_map_new_rep.txt -o usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/PCoA_2D_plot_sorensen/
-
+```
+```
 make_2d_plots.py -i usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/pcoa_bray_curtis_otu_table_mc2_w_tax_even455229.txt -m usearch61_openref_3rd/Collapsed_sum/collapsed_map_new_rep.txt -o usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229_PCoA/PCoA_2D_plot_Bray_Curtis/
+```
 
-
-NMS plots
+***
+Using QIIME for visualization: Ordination (NMS plot)
+***
+```
 mkdir usearch61_openref_3rd/Collapsed_sum/even455229/NMDS_Plot
+```
+```
 nmds.py -i usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229/bray_curtis_otu_table_mc2_w_tax_even455229.txt -o usearch61_openref_3rd/Collapsed_sum/even455229/NMDS_Plot/mc2_even455229_braycurtis_NMDS_coords.txt
-
+```
+```
 nmds.py -i usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229/binary_sorensen_dice_otu_table_mc2_w_tax_even455229.txt -o usearch61_openref_3rd/Collapsed_sum/even455229/NMDS_Plot/mc2_even455229_sorenson_NMDS_coords.txt
-
+```
+```
 nmds.py -i usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229/unweighted_unifrac_otu_table_mc2_w_tax_even455229.txt -o usearch61_openref_3rd/Collapsed_sum/even455229/NMDS_Plot/mc2_even455229_UWunifrac_NMDS_coords.txt
-
+```
+```
 nmds.py -i usearch61_openref_3rd/Collapsed_sum/even455229/compar_div_even455229/weighted_unifrac_otu_table_mc2_w_tax_even455229.txt -o usearch61_openref_3rd/Collapsed_sum/even455229/NMDS_Plot/mc2_even455229_Wunifrac_NMDS_coords.txt
+```
 
+***
 Make heatmap
+***
+```
 mkdir usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/heatmap/
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/otu_table_mc2_w_tax_even455229_L2.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/heatmap/heatmap_L2_even455229.pdf
-
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/otu_table_mc2_w_tax_even455229_L3.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/heatmap/heatmap_L3_even455229.pdf
-
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/otu_table_mc2_w_tax_even455229_L4.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/heatmap/heatmap_L4_even455229.pdf
-
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/otu_table_mc2_w_tax_even455229_L5.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/heatmap/heatmap_L5_even455229.pdf
-
+```
+```
 make_otu_heatmap.py -i usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/otu_table_mc2_w_tax_even455229_L6.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/WS_Diversity_even455229/taxa_summary455229/heatmap/heatmap_L6_even455229.pdf
+```
 
+***
+### Make OTU table with taxomony
+***
 
- 
-Make OTU table with taxomony
+***
+## For replicate 1
+***
+* Total OTU
+```
 biom convert -i usearch61_openref_1st/otu_table_mc2_w_tax.biom -o usearch61_openref_1st/1st_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-
-biom convert -i usearch61_openref_2nd/otu_table_mc2_w_tax.biom -o usearch61_openref_2nd/2nd_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-
-biom convert -i usearch61_openref_3rd/otu_table_mc2_w_tax.biom -o usearch61_openref_3rd/3rd_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-
-
+```
+* Average OTU
+```
 biom convert -i usearch61_openref_1st/even77008/otu_table_mc2_w_tax_even77008.biom -o usearch61_openref_1st/even77008/1st_biom_converted_OTU_table_w_tax_even77008.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-
-biom convert -i usearch61_openref_2nd/even77035/otu_table_mc2_w_tax_even77035.biom -o usearch61_openref_2nd/even77035/2nd_biom_converted_OTU_table_w_tax_even77035.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-
-biom convert -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom -o usearch61_openref_3rd/even77118/3rd_biom_converted_OTU_table_w_tax_even77118.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-
-
+```
+* Collapsed_sum
+```
 biom convert -i usearch61_openref_1st/even454693/otu_table_mc2_w_tax_even454693.biom -o usearch61_openref_1st/even454693/1st_biom_converted_OTU_table_w_tax_even454693.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
 
+***
+## For replicate 2
+***
+* Total OTU
+```
+biom convert -i usearch61_openref_2nd/otu_table_mc2_w_tax.biom -o usearch61_openref_2nd/2nd_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Average OTU
+```
+biom convert -i usearch61_openref_2nd/even77035/otu_table_mc2_w_tax_even77035.biom -o usearch61_openref_2nd/even77035/2nd_biom_converted_OTU_table_w_tax_even77035.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Collapsed_sum
+```
 biom convert -i usearch61_openref_2nd/Collapsed_sum/even455113/otu_table_mc2_w_tax_even455113.biom -o usearch61_openref_2nd/Collapsed_sum/even455113/2nd_biom_converted_OTU_table_w_tax_even455113.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
 
+***
+## For replicate 3
+***
+* Total OTU
+```
+biom convert -i usearch61_openref_3rd/otu_table_mc2_w_tax.biom -o usearch61_openref_3rd/3rd_biom_converted_OTU_table_w_tax.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Average OTU
+```
+biom convert -i usearch61_openref_3rd/even77118/otu_table_mc2_w_tax_even77118.biom -o usearch61_openref_3rd/even77118/3rd_biom_converted_OTU_table_w_tax_even77118.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+* Collapsed_sum
+```
 biom convert -i usearch61_openref_3rd/Collapsed_sum/even455229/otu_table_mc2_w_tax_even455229.biom -o usearch61_openref_3rd/Collapsed_sum/even455229/3rd_biom_converted_OTU_table_w_tax_even455229.txt --table-type "OTU table" --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
-
+```
