@@ -1,4 +1,10 @@
 ***
+### Launch QIIME AMI instance ###
+***
+If, the number of sequences are too much, Launch "m3.xlarge" instance.
+
+
+***
 ### Install usearch61 and usearch onto the QIIME AMI instance ###
 ***
 ```
