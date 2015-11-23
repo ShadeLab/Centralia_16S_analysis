@@ -71,3 +71,11 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o mock_denoised_classifi
 ```
 
 ### Make a database of contaminant OTUs detected in mock community by removing real rep. OTU sequences (mock type stains) from `mock_denoised_NoChimeraRef_otus.fa`.  New db file is: `mock_craptaminant_OTU_db.fa`
+
+
+#Part 2.  Community analysis
+### PATH to raw fastq (zipped) on ShadeLab HPCC research space
+```
+research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_A_16S_PE/
+research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_B_16S_PE/
+```

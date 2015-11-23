@@ -535,3 +535,133 @@ WARNING: Option -abskew ignored
 ### Making a database of craptaminants - contaminants and gross multi-error OTUs remaining after the top 6 type strains are set aside.
 * Include all OTUs not among the top 6 - there are 1623 OTUs total, so the remaining 1617 will be the craptaminants db.
 * I did this manually by editing (in nano) the mock_denoised_NoChimeraRef_otus.fa to remove the top 6 OTUs' representative sequence (centroid) and leave the remaining ones.  The resulting sequence file is called `mock_craptaminant_OTU_db.fa`.
+
+### Developing usearch workflow for whole community
+* A script to automate paired end merging, based on last year's PANDAseq bash (script)[https://github.com/edamame-course/2015-tutorials/blob/master/QIIME_files/Cen_pandaseq_merge.sh]
+
+* Copy all file names to new nano file, and then use grep to output the forward reads into a new file.  (Rename the new file, remove the old.)
+* merge_fq_list.txt includes only Centralia fastq names, plus the mock community, totaling 55 file names.  18 samples x 3 reps each = 54, plus mock = 55.
+* Making copies of fastq files for merging
+* rsync (example)[http://unix.stackexchange.com/questions/41693/how-to-copy-some-but-not-all-files] to exclude extra sequencing files (from Matt Schrenk's group)
+```
+pwd
+>/mnt/research/ShadeLab/WorkingSpace/Shade_MockCom/Merging
+
+rsync -aP --exclude='*SCH*' ../../../Shade/20141230_16Stag_Centralia/20141230_B_16S_PE/* .
+
+rsync -aP ../../../Shade/20141230_16Stag_Centralia/20141230_A_16S_PE/* .
+
+#unzip
+gunzip *gz
+
+```
+
+
+* qsub for merging
+
+```
+#! /bin/bash --login
+# Time job will take to execute (HH:MM:SS format)
+#PBS -l walltime=01:00:00
+# Memory needed by the job
+#PBS -l mem=264Gb
+# Number of shared memory nodes required and the number of processors per node
+#PBS -l nodes=1:ppn=8
+# Make output and error files the same file
+#PBS -j oe
+# Send an email when a job is aborted, begins or ends
+#PBS -m abe
+# Give the job a name
+#PBS -N mergereads_12nov15
+# _______________________________________________________________________#
+
+cd ${PBS_O_WORKDIR}
+
+#load software
+module load USEARCH/8.1.1803
+
+# use usearch -fastq_mergepairs to merge reads - requires name list for FORWARD reads only (file <merge_fq_list.txt>); list file should be located in same directory as this script and the fastq files.
+
+#make an output directory
+mkdir mergedfastq
+
+for file in $(<merge_fq_list.txt)
+do
+
+    usearch -fastq_mergepairs ${file} -fastqout mergedfastq/${file}_merged.fastq -relabel @ -fastq_merge_maxee 1.0 -fastq_minmergelen 250 -fastq_maxmergelen 274 -fastq_nostagger
+
+done
+
+# _______________________________________________________________________#
+# PBS stats
+cat ${PBS_NODEFILE}
+env | grep PBS
+qstat -f ${PBS_JOBID}
+```
+
+## 13 Nov 2015
+* The qsub script ran but failed on all but 17 samples. I think the reason is because the usearch merging script automatically detects the Illumina "R1" signature in the read names and uses this position to identify the "R2" mate.  Unfortunately, our sample names also include an "R" identified to designate the replicate core.  So, I think the script is confusing this first R with the last Illumina R.  I can either rename our files or designate the reverse reads in the input command.
+
+* first, I cleaned up the working directory to remove extra files
+```
+find . -type f -name '*.fastq' -delete
+```
+* I made a new parent directory called Shade_WorkingSpace, and moved the Merging and the Shade_MockCom subdirectories to Shade_Working. Then, I proceeded with the moving, the unzipping, the renaming, and the merge qsubscript.
+```
+pwd
+>/mnt/research/ShadeLab/WorkingSpace/Shade_WorkingSpace/Merging
+
+rsync -aP --exclude='*SCH*' ../../../Shade/20141230_16Stag_Centralia/20141230_B_16S_PE/* .
+
+rsync -aP ../../../Shade/20141230_16Stag_Centralia/20141230_A_16S_PE/* .
+
+#unzip
+gunzip *gz
+
+#sanity check: find all files with extension
+find . -type f -name '*_L001_R*_001.fastq' | wc -l
+>132
+#We had some extra samples (11 extra not including Matt Schrenk's, which would be 22 extra F and R fastq's).  We have 55 samples of interest (18 samples * 3 DNA replicates + Mock community), and we have F and R fastq's for both = 110 files, plus the 22 extra = 132.  Sanity check a success!
+
+#Rename files
+#rename is a space-delimited file with the FULL old file name first and the new file name second
+while read line; do eval mv $line; done < rename.txt
+
+#this returned errors, but the process seemed to work, as samples that files that should have had shortened names do, and files should not, do not.
+#Example error
+#mv: cannot stat `C18_06102014_RE1_D06_GAGGCTCATCAT_L001_R2_001.fastq': No such file or directory
+#After googling, this error may be from "globbing" from wildcard?
+
+#Run merge qsub script
+qsub merge.qsub
+>output file:
+#mergereads_12nov15.o28216219, mergedfastq/
+```
+
+* Checking the output file, mergereads_12nov15.o28216219
+* the script took less than 5 minutes to run, we can decrease wall time.  it took about 5.5 s. per sample to merge. I reduced to a generous 15 minute wall time for the merge qsub for 55 samples.
+* merge_fq_list.txt is a list of FORWARD (R1) file names only (hopefully, this could be *automated* in the future by taking the second column of the rename.txt script, including only the R1 reads)
+* output must be in the same order as the list of file names to output
+* also revised script to echo ${file} to make it easier to collate the merging data
+* also want to write script to *automate* collation of the merging results
+* merging results were completely consistent (100% reproducible) across replicate mergings on the same sample.  
+* according to results file, fatal errors (no file found) for samples.  These seem to be misnamed on the merge_fq_list.  They should include D07, D08, and D09.
+C13D07_TCTAGCGTAGTG_L001_R1_001
+C13D08_TCGAGGACTGCA_L001_R1_001
+C13D09_CGGAGCTATGGT_L001_R1_001
+* actually, the rename file (rename.txt) was off, not the merge_fq_list.
+* In the SeqProduction file (A), the names are:
+C13_06102014_R2_D07	TCTAGCGTAGTG
+C13_06102014_R2_D08	TCGAGGACTGCA
+C13_06102014_R2_D09	CGGAGCTATGGT
+* In the rename.txt file, the names are:
+C13_06102014_R2_D07_TCTAGCGTAGTG_L001_R1_001.fastq  C13D10_TCTAGCGTAGTG_L001_R1_001.fastq
+C13_06102014_R2_D08_TCGAGGACTGCA_L001_R1_001.fastq  C13D11_TCGAGGACTGCA_L001_R1_001.fastq
+C13_06102014_R2_D09_CGGAGCTATGGT_L001_R1_001.fastq  C13D12_CGGAGCTATGGT_L001_R1_001.fastq
+* So, the correct names are 7,8,9 but the switcheroo happened in rename.  I manually edited rename.txt, and will re-run
+
+```
+#remove unmerged fastq's
+rm *fastq
+
+```
