@@ -75,7 +75,60 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o mock_denoised_classifi
 
 #Part 2.  Community analysis
 ### PATH to raw fastq (zipped) on ShadeLab HPCC research space
+
 ```
 research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_A_16S_PE/
 research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_B_16S_PE/
+```
+
+### i.  Merge fastq reads - executed as a qsub 'merge.qsub'
+
+```
+mkdir mergedfastq
+
+for file in $(<merge_fq_list.txt)
+do
+
+    usearch -fastq_mergepairs ${file} -fastqout mergedfastq/${file}_merged.fastq -relabel @ -fastq_merge_maxee 1.0 -fastq_minmergelen 250 -fastq_maxmergelen 274 -fastq_nostagger
+
+done
+```
+
+### ii.  Pool all merged-paired ends across samples
+
+```
+find ./mergedfastq -type f -name '*fastq' -exec cat '{}' > combined_merged.fastq ';'
+
+## output file:  combined_merged.fastq
+```
+
+### iii.  De-replicate
+
+```
+usearch -derep_fulllength combined_merged.fastq -fastqout uniques_combined_merged.fastq -sizeout
+
+## output file: uniques_combined_merged.fastq
+```
+
+### iv.  Remove single sequences
+
+```
+usearch -sortbysize uniques_combined_merged.fastq -fastqout nosigs_uniques_combined_merged.fastq -minsize 2
+## output file: nosigs_uniques_combined_merged.fastq
+```
+
+### v. Precluster (denoise) - for our dataset on the 64-bit usearch, this takes ~1 hour to run.
+
+```
+usearch -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq denoised_nosigs_uniques_combined_merged.fastq -id 0.9 -maxdiffs 5 -abskew 10 -sizein -sizeout -sort size
+
+## output file: denoised_nosigs_uniques_combined_merged.fastq
+```
+
+### vi.  Remove sequences that match 100% to our craptaminant database
+
+```
+usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -relabel crapOTU_ -sizeout -uparseout craptaminant_otu_results.txt
+
+## output files: craptaminant_otu_results.txt, craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa, nocrap_denoised_nosigs_uniques_combined_merged.fastq
 ```

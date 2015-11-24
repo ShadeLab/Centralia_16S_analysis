@@ -115,7 +115,8 @@ WARNING: Option -relabel ignored
 
 
 * Majority merge length (250-264), Pairs, Exact overlaps, Not aligned, Too many gaps (max=0),  Gaps, Mismatches, Fwd errs, Rev errs, Staggered values are the same across different maxee values.  
-* Sweet update!  HPCC *ALREADY* has updated usearch right freakin now.  Sweet sweet sweet.
+* Sweet update!  HPCC *ALREADY* has updated usearch right freakin now.  Sweet sweet sweet.   
+
 ```
 module load USEARCH/8.1.1803
 
@@ -151,7 +152,8 @@ WARNING: Max OMP threads 1
       0.26  Mean merged expected errors
 ```
 
-* I used FASTQC to assess the overall quality of the usearch merging
+* I used FASTQC to assess the overall quality of the usearch merging   
+
 ```
 #sanity check - check that the number of merged seqs matches expectations from usearch merge output table (above)
 
@@ -166,6 +168,7 @@ fastqc Mock.fastq
 ```
 
 * open new terminal, move fastqc output to desktop to view html summary
+
 ```
 scp shadeash@hpcc.msu.edu:/mnt/research/ShadeLab/WorkingSpace/Shade_MockCom/Mock_fastqc.html .
 
@@ -176,6 +179,7 @@ open Mock_fastqc.html
 
 * moving on:  UNOISE algorithm
 * using default of d=5, w=10; note that w may be fine-tuned for mock communities as per Edgar and Flyvbjerg 2015
+
 ```
 #UNOISE  
 #step 1:  make a database of all unique sequences
@@ -269,6 +273,7 @@ Licensed to: billspat@msu.edu
 ```
 
 * now, will continue with UNOISE step 2 -  to pre-cluster sequences that are likely derived from the same parent
+
 ```
 [shadeash@dev-intel14 Shade_MockCom]$ usearch -cluster_fast uniques_Mock_nosigs.fastq -centroids_fastq denoised.fq -id 0.9 -maxdiffs 5 -abskew 10 -sizein -sizeout -sort size
 usearch v8.1.1803_i86linux32, 4.0Gb RAM (264Gb total), 20 cores
@@ -317,6 +322,7 @@ Licensed to: billspat@msu.edu
 00:05  52Mb  100.0% 1717 OTUs, 4497 chimeras (50.5%)
 #output files: results.txt, mock_denoised_otus.fa
 ```
+
 * interesting results - we have >1K OTUs (when we should have 6).  However, this is a lot better than what we were doing (previously)[https://github.com/ShadeLab/DataTimeNotes/blob/master/20150429_DataTime_OTUInflationIssues.md].  
 * Many chimeras detected - 50%.  This would be really high for a non-mock community, but I'm not sure for this mock community.  
 * For the mock community, we can also run an additional ref-uchime chimera detection, though I'm not sure that I would recommend this step for the full dataset because of the novel diversity that we expect.
@@ -324,6 +330,7 @@ Licensed to: billspat@msu.edu
 ## 11 Nov 2015
 ### Continuing with mock community and usearch tools for decreasing OTU inflation
 * If we inspect the top of the results file from the otu clustering (uparse algorithm), we see that the top 6 OTUs have the most sequences, and after that we go from OTUs with >12938 sequences to OTUs with <1000 sequences:
+
 ```
 [shadeash@dev-intel14 Shade_MockCom]$ more results.txt
 Mock.16;size=56854;	otu	*	*	OTU_1
@@ -344,6 +351,7 @@ Mock.12;size=570;	match	97.2	*	OTU_6
 Mock.1564;size=539;	match	97.2	*	OTU_3
 Mock.746;size=400;	chimera	96.4	100.0	OTU_3(1-157)+OTU_5(158-253)
 ```
+
 * Does this suggest that we should (conservately) omit any OTUs with <1000 sequences?  This is a huge jump from omitting singleton sequences only.
 * will try the additional chimera detection using UCHIME with gold reference database, as suggested (here)[http://drive5.com/usearch/manual/uparse_cmds.html]
 * another note with the above linked workflow - it suggests re-mapping all reads, including the singleton sequences- to the OTUs, despite that elsewhere it suggests that these reads are errors.
@@ -413,7 +421,9 @@ WARNING: Max OMP threads 1
 
 #output files: Mock_OTU_table.txt, map.uc
 ```
+
 * here is the head of the otu map, "map.uc":
+
 ```
 [shadeash@dev-intel10 Shade_MockCom]$ more map.uc
 H	0	253	99.2	+	0	0	253M	Mock.1	OTU_1;size=57978;
@@ -660,8 +670,103 @@ C13_06102014_R2_D08_TCGAGGACTGCA_L001_R1_001.fastq  C13D11_TCGAGGACTGCA_L001_R1_
 C13_06102014_R2_D09_CGGAGCTATGGT_L001_R1_001.fastq  C13D12_CGGAGCTATGGT_L001_R1_001.fastq
 * So, the correct names are 7,8,9 but the switcheroo happened in rename.  I manually edited rename.txt, and will re-run
 
-```
-#remove unmerged fastq's
-rm *fastq
+
+
+## 23 Nov 2015
+* Continue with merging and assessing the performance of usearch fastq_mergepairs script on our Centralia data
 
 ```
+qsub merge.qsub
+```
+* I output the merging stats for every sample from the results file 'mergereads_usearch.o28318404' , and curated it manually for plotting summary statistics in R.  There must be a way to *automate* the extraction of data for each merge into a tab-delimited text format.
+
+* Here are the summary statistics of all 55 merged fastq's (including Mock community)
+![img1](Rplot_MergeSummary.tiff)
+
+* There is an outlier sample (in red) that has generally lower merging/ numbers of input pairs.  This sample is:
+ C03D02_CTAACCTCCGCT_L001_R1_001     153083  Pairs, 82538 Merged
+
+ * moving forward - remove unmerged fastq from working directory, and then proceed with usearch pipeline for quality filtering and OTU picking
+
+ ```
+ #remove un-merged fastq's (specify maxdepth 1 to avoid deleting merged fastq's in the subdirectory)
+ find . -type f -name '*.fastq' -delete -maxdepth 1
+
+ #combine together all merged fastq's
+ find ./mergedfastq -type f -name '*fastq' -exec cat '{}' > combined_merged.fastq ';'
+
+ #dereplicate
+ module load USEARCH/8.1.1803
+
+ usearch -derep_fulllength combined_merged.fastq -fastqout uniques_combined_merged.fastq -sizeout
+
+ #output files: uniques_combined_merged.fastq
+
+ #Remove singletons
+ usearch -sortbysize uniques_combined_merged.fastq -fastqout nosigs_uniques_combined_merged.fastq -minsize 2
+
+ #output files:   nosigs_uniques_combined_merged.fastq
+
+ ```
+
+* SNAFU!  The 32-bit version of usearch cannot handle our large data, and the de-replication step returned an error.  We need to try to get an upgrade for the rdp's 64-bit version.
+
+## 24 Nov 2015
+* GOOD NEWS!  RDP was able to update their 64-bit version from 7 to 8.1.1831!  
+* PATH to RDP usearch:  /mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64
+
+```
+#De-replicate merged reads
+[shadeash@dev-intel14 Merging]$ /mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -derep_fulllength combined_merged.fastq -fastqout uniques_combined_merged.fastq -sizeout
+
+usearch v8.1.1831_i86linux64, 264Gb RAM, 20 cores
+(C) Copyright 2013-15 Robert C. Edgar, all rights reserved.
+http://drive5.com/usearch
+
+Licensed to: colej@msu.edu
+
+02:54 6.7Gb  100.0% Reading combined_merged.fastq
+
+WARNING: Max OMP threads 1
+
+03:11 7.3Gb 10995193 seqs, 5256753 uniques, 4439743 singletons (84.5%)
+03:11 7.3Gb Min size 1, median 1, max 105735, avg 2.09
+03:24 7.2Gb  100.0% Writing uniques_combined_merged.fastq
+
+##output files: uniques_combined_merged.fastq
+
+
+#Remove single sequences
+[shadeash@dev-intel14 Merging]$ /mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -sortbysize uniques_combined_merged.fastq -fastqout nosigs_uniques_combined_merged.fastq -minsize 2
+
+usearch v8.1.1831_i86linux64, 264Gb RAM, 20 cores
+(C) Copyright 2013-15 Robert C. Edgar, all rights reserved.
+http://drive5.com/usearch
+
+Licensed to: colej@msu.edu
+
+00:36 3.2Gb  100.0% Reading uniques_combined_merged.fastq
+00:36 3.2Gb Getting sizes                                
+00:42 3.2Gb Sorting 817010 sequences
+00:43 3.2Gb  100.0% Writing output
+
+##output file:   nosigs_uniques_combined_merged.fastq
+
+
+#Pre-cluster (denoise)
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq denoised_nosigs_uniques_combined_merged.fastq -id 0.9 -maxdiffs 5 -abskew 10 -sizein -sizeout -sort size
+
+##output file: denoised_nosigs_uniques_combined_merged.fastq
+
+#Closed-reference OTU picking to eliminate OTUs that match exactly to the craptaminant database
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -relabel crapOTU_ -sizeout -uparseout craptaminant_otu_results.txt
+
+#output files: craptaminant_otu_results.txt, craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa, nocrap_denoised_nosigs_uniques_combined_merged.fastq
+
+```
+
+# Open reference OTU picking step 1
+Match to the best database we've got, but save those clusters that do not hit
+
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 usearch_global -otus nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -relabel refOTU_ -sizeout -uparseout ref_otu_results.txt -db INSERT DB
