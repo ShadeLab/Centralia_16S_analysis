@@ -754,16 +754,48 @@ Licensed to: colej@msu.edu
 
 
 #Pre-cluster (denoise)
-/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq denoised_nosigs_uniques_combined_merged.fastq -id 0.9 -maxdiffs 5 -abskew 10 -sizein -sizeout -sort size
+[shadeash@dev-intel14 Merging]$ /mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq denoised_nosigs_uniques_combined_merged.fastq -id 0.9 -maxdiffs 5 -abskew 10 -sizein -sizeout -sort size
+usearch v8.1.1831_i86linux64, 264Gb RAM, 20 cores
+(C) Copyright 2013-15 Robert C. Edgar, all rights reserved.
+http://drive5.com/usearch
+
+Licensed to: colej@msu.edu
+
+00:03 537Mb  100.0% Reading nosigs_uniques_combined_merged.fastq
+00:03 503Mb Pass 1...
+WARNING: Max OMP threads 1
+
+817010 seqs (tot.size 6555450), 817010 uniques, 0 singletons (0.0%)
+00:05 561Mb Min size 2, median 2, max 105735, avg 8.02
+00:06 581Mb done.
+00:07 587Mb Sort size... done.
+57:35 1.2Gb  100.0% 309956 clusters, max size 196850, avg 21.14
+57:35 1.2Gb    0.0% Writing centroids to denoised_nosigs_uniques_combined_merged57:36 1.2Gb   23.1% Writing centroids to denoised_nosigs_uniques_combined_merged57:36 1.2Gb  100.0% Writing centroids to denoised_nosigs_uniques_combined_merged.fastq
+
+      Seqs  817010 (817.0k)
+  Clusters  309956 (310.0k)
+  Max size  196850 (196.8k)
+  Avg size  21.1
+  Min size  2
+Singletons  0, 0.0% of seqs, 0.0% of clusters
+   Max mem  1.2Gb
+      Time  57:32
+Throughput  236.7 seqs/sec.
 
 ##output file: denoised_nosigs_uniques_combined_merged.fastq
 
 #Closed-reference OTU picking to eliminate OTUs that match exactly to the craptaminant database
-/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -relabel crapOTU_ -sizeout -uparseout craptaminant_otu_results.txt
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -matchedfq craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq 
 
-#output files: craptaminant_otu_results.txt, craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa, nocrap_denoised_nosigs_uniques_combined_merged.fastq
+#output files: craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq, nocrap_denoised_nosigs_uniques_combined_merged.fastq
 
+grep -c @ craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq
+>1391
 ```
+
+* there were 1391 denoised sequences that had perfect matches to our craptaminant database.  We can move forward omitting these.
+
+
 
 # Open reference OTU picking step 1
 Match to the best database we've got, but save those clusters that do not hit
