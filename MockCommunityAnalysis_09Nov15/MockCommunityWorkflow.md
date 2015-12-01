@@ -130,5 +130,40 @@ usearch -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq deno
 ```
 usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -relabel crapOTU_ -sizeout -uparseout craptaminant_otu_results.txt
 
-## output files: craptaminant_otu_results.txt, craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa, nocrap_denoised_nosigs_uniques_combined_merged.fastq
+## output files:
+### craptaminant_otu_results.txt;
+### craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa;
+### nocrap_denoised_nosigs_uniques_combined_merged.fastq
 ```
+
+### vi.  Reference-based OTU picking using usearch_global: Cluster sequences at 97% identity to the greengenes database, version 13.8
+
+```
+usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
+
+## output files:
+### RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc (usearch standard results table);
+### RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq (sequences that did not hit the gg db and need to be clustered de novo)
+### gg_97_rep_set_matched.fa (gg 97_rep_set matches to our dataset - add to MASTER OTU rep. sequences)
+```
+
+### vii.  De novo OTU picking using uclust:  cluster sequences at 97% identity (includes chimera checking with uparse)
+
+```
+usearch -cluster_otus RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -minsize 2 -otus DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa -relabel OTU_dn_ -sizeout -uparseout DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up
+
+## output files:
+### DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa (representative sequences for de novo OTUs)
+### DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up (uparse standard results table)
+```
+
+### viii.  Combine ref-based and de novo representative OTU sequences into one master OTU "db" file.
+
+```
+cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa > MASTER_RepSeqs.fa
+```
+
+### ix.  Map all sequences (pre-dereplication) back to OTU definitions using usearch_global.  Any OTUs that do not hit the new OTU database are discarded
+
+```
+usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -otutabout MASTER_OTU_table.txt

@@ -785,7 +785,7 @@ Throughput  236.7 seqs/sec.
 ##output file: denoised_nosigs_uniques_combined_merged.fastq
 
 #Closed-reference OTU picking to eliminate OTUs that match exactly to the craptaminant database
-/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -matchedfq craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq 
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -matchedfq craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq
 
 #output files: craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq, nocrap_denoised_nosigs_uniques_combined_merged.fastq
 
@@ -795,10 +795,94 @@ grep -c @ craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq
 
 * there were 1391 denoised sequences that had perfect matches to our craptaminant database.  We can move forward omitting these.
 
+```
+grep -c @ nocrap_denoised_nosigs_uniques_combined_merged.fastq
+308598
+```
+* there were 308598 denoised sequences that remained for analysis.
 
-
-# Open reference OTU picking step 1
-Match to the best database we've got, but save those clusters that do not hit
+## 30 November 2015
+### Getting a database for the reference-based OTU picking
+* downloaded the 13.8 greengenes database from the [qiime resources paged](http://qiime.org/home_static/dataFiles.html) and transferred to ShadeLab working space:
 
 ```
-/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 usearch_global -otus nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -relabel refOTU_ -sizeout -uparseout ref_otu_results.txt -db INSERT DB
+scp gg_13_8_otus.tar.gz shadeash@hpcc.msu.edu:/mnt/research/ShadeLab/WorkingSpace/Shade_WorkingSpace/Merging
+```
+* unzip db onto HPCC
+
+```
+tar -zxvf gg_13_8_otus.tar.gz
+```
+
+### Open reference OTU picking step 1
+* test the script: Match to the best database we've got, but save those clusters that do not hit
+
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -relabel refOTU_ -sizeout -uparseout ref_otu_results.txt -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -centroids RefMatchedCentroids_nocrap_denoised_nosigs_uniques_combined_merged.fasta -strand plus
+```
+* submitted a qsub for the above script
+
+```
+grep -c @ RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq
+254447
+```
+
+* based on output file, the following options are void with usearch_global:
+```
+WARNING: Option -centroids ignored
+
+
+WARNING: Option -relabel ignored
+
+
+WARNING: Option -uparseout ignored
+
+
+WARNING: Option -sizeout ignored
+
+# revised the command, as below
+
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatch_nocrap_denoised_nosigs_uniques_combined_merged.txt -matchedfq RefMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq
+
+##Results - sequences in each - hitting the database and not
+[shadeash@dev-intel10 Merging]$ grep -c @ RefMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq
+54151
+[shadeash@dev-intel10 Merging]$ grep -c @ RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq
+254447
+
+# Try again, this time with the OTU table write-out (it is so hard to find out all of the options for these scripts from the usearch manual)
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatch_nocrap_denoised_nosigs_uniques_combined_merged.txt -matchedfq RefMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -otutabout RefMatchOTUs_nocrap_denoised_nosigs_uniques_combined_merged.txt
+
+
+wc -l RefMatchOTus_nocrap_denoised_nosigs_uniques_combined_merged.txt
+9145 RefMatchOTus_nocrap_denoised_nosigs_uniques_combined_merged.txt
+```
+* usearch_global against greengenes took less than 15 minutes to execute
+* we have 9,145 OTUs with 97% identity to the greengenes reference database v 13.8
+* perhaps we don't really need the OTU table back at this point, since we are using dereplicated sequences... if so, omit the -otutaout option
+
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -cluster_otus RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -minsize 2 -otus DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa -relabel OTU_dn_ -sizeout -uparseout DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up
+```
+* there were 195,358 chimeras detected
+* realized I should have output the .fa instead of the fastq file for the uclust_global against the gg db. back to usearch_global
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -matched RefMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa -otutabout RefMatchOTUTab_nocrap_denoised_nosigs_uniques_combined_merged.txt
+
+# combine the representative OTUs from the reference-based and de novo clustering
+cat eNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa RefMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa > MASTER_RepSeqs.fa
+```
+* there are, in total 75,071 representative sequences = 75,071 OTUs? 54,148 from the reference-based, and 20,923 from the de novo.
+* now, onto matching the original merged reads (including errors and singletons, which could be "counted" if they cluster at 97% to our OTUs) using usearch_global
+
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -otutabout MASTER_OTU_table.txt
+```
+* the job took 1.5 hrs to run (walltime)
+* seems that the OTU table contains 64,667 OTUs.  This is still relatively high, but much fewer than the previous ~300,000 we were getting before the quality filtering.  This also ~10K fewer than the 75,071 - where did those OTUs go?  
+* notes from this usearch manual [page](http://www.drive5.com/usearch/manual/termination_options.html).  the usearch_global (used for reference db matching and, ultimately, for mapping reads) default options for maxaccepts and maxrejects is 1 and 32, respectively, and for cluster_fast (used for "denoising") it is 1 and 8.
+* One nomenclature problem is that the ref-based OTUs have the name of the seq/sample instead of the gg ID.  Need to figure that out.  What if when we run usearch_global against the gg db, we return the db matches instead of the dataset matches by setting the -dbmatched options, and THEN combining it with the de novo options?  That should have consistent nomenclature across datasets.  We don't actually need our matches from our dataset - we need the non-matches from our dataset (to move forward to de novo clustering) and the db matches to combine with the de-novos.
+
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
+```
