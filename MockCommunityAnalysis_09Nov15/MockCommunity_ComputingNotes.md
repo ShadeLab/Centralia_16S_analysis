@@ -1,4 +1,5 @@
-# Mock community analysis Ashley Shade
+# Mock community analysis
+### Ashley Shade, Michigan State University
 ## 09 Nov 2015
 ### Problem:  OTU overinflation in Centralia 2014 16S amplicon dataset
 * We have ~300,000 OTUs  this is >20X more than we expect
@@ -884,5 +885,25 @@ cat eNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa
 * One nomenclature problem is that the ref-based OTUs have the name of the seq/sample instead of the gg ID.  Need to figure that out.  What if when we run usearch_global against the gg db, we return the db matches instead of the dataset matches by setting the -dbmatched options, and THEN combining it with the de novo options?  That should have consistent nomenclature across datasets.  We don't actually need our matches from our dataset - we need the non-matches from our dataset (to move forward to de novo clustering) and the db matches to combine with the de-novos.
 
 ```
+cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa > MASTER_RepSeqs.fa
+
 /mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
 ```
+
+* also, can I use an alias on the HPCC, within a script?  let's find out...YES
+
+```
+alias usearch='/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64'
+```
+
+### 03 Dec 2015
+* Re-ran the OTU mapping with the gg/de_novo database
+*  Results:  30K sequences - this makes quite a bigger difference in reducing the OTUs because it uses longer sequences from the gg db as the reference rather than the dataset (duh) which is more appropriate/ correct.  We have ~30K OTUs, which is more in line with what we should expect from the literature
+```
+[shadeash@dev-intel14 Merging]$ wc -l MASTER_OTU_table.txt
+29958 MASTER_OTU_table.txt
+
+grep -c "^>" MASTER_RepSeqs.fa
+30067
+```
+* Now, it is time to start with a clean slate, re-run the analysis, and reproduce the results, starting from the work with the full dataset.

@@ -1,0 +1,132 @@
+#! /bin/bash --login
+# Time job will take to execute (HH:MM:SS format)
+#PBS -l walltime=06:00:00
+# Memory needed by the job
+#PBS -l mem=264Gb
+# Number of shared memory nodes required and the number of processors per node
+#PBS -l nodes=1:ppn=8
+# Make output and error files the same file
+#PBS -j oe
+# Send an email when a job is aborted, begins or ends
+#PBS -m abe
+# Give the job a name
+#PBS -N batch_usearch_centralia_03dec2015
+# _______________________________________________________________________#
+
+cd ${PBS_O_WORKDIR}
+
+## set alias for usearch
+alias usearch='/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64'
+
+## PATH to raw fastq (zipped) on ShadeLab HPCC research space
+### research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_A_16S_PE/
+### research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_B_16S_PE/
+
+## PATH to gg db 13.8
+### /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus
+
+## FILES THAT MUST BE IN THE WORKING directory
+# COPY of gg 97 rep set: 97_otus.fasta
+# File of renaming conventions:  rename.txt
+# Names of paired ends:  merge_fq_list.txt
+# craptaminant db
+
+
+### i.  Copy needed raw fastq files
+mkdir rawfastq
+mv rename.txt rawfastq/
+cd rawfastq
+
+rsync -aP --exclude='*SCH*' /mnt/research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_B_16S_PE/* .
+rsync -aP /mnt/research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_A_16S_PE/* .
+
+#unzip files
+gunzip *gz
+
+## rename files
+while read line; do eval mv $line; done < rename.txt
+
+cd ..
+
+### i.  Merge and quality filter paired-end fastq reads
+mkdir mergedfastq
+
+for file in $(<merge_fq_list.txt)
+do
+
+    usearch -fastq_mergepairs rawfastq/${file}.fastq -fastqout mergedfastq/${file}_merged.fastq -relabel @ -fastq_merge_maxee 1.0 -fastq_minmergelen 250 -fastq_maxmergelen 274 -fastq_nostagger
+
+done
+
+### ii.  Pool all merged-paired ends across samples
+mv rename.txt ..
+cd ..
+
+find ./mergedfastq -type f -name '*fastq' -exec cat '{}' > combined_merged.fastq ';'
+
+## output file:
+### combined_merged.fastq
+
+### clean-up: remove unmerged raw file directory
+rm -rf rawfastq/
+
+## clean-up: remove merged, uncombined file directory
+rm -rf mergedfastq/
+
+### iii.  De-replicate
+usearch -derep_fulllength combined_merged.fastq -fastqout uniques_combined_merged.fastq -sizeout
+
+## output file:
+### uniques_combined_merged.fastq
+
+### iv.  Remove single sequences
+usearch -sortbysize uniques_combined_merged.fastq -fastqout nosigs_uniques_combined_merged.fastq -minsize 2
+
+## output file:
+### nosigs_uniques_combined_merged.fastq
+
+### v. Precluster (denoise) - for our dataset on the 64-bit usearch, this takes ~1 hour to run.
+usearch -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq denoised_nosigs_uniques_combined_merged.fastq -id 0.9 -maxdiffs 5 -abskew 10 -sizein -sizeout -sort size
+
+## output file:
+### denoised_nosigs_uniques_combined_merged.fastq
+
+### vi.  Remove sequences that match 100% to our craptaminant database
+usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -relabel crapOTU_ -sizeout -uparseout craptaminant_otu_results.txt
+
+## output files:
+### craptaminant_otu_results.txt;
+### craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa;
+### nocrap_denoised_nosigs_uniques_combined_merged.fastq
+
+### vi.  Reference-based OTU picking using usearch_global: Cluster sequences at 97% identity to the greengenes database, version 13.8
+usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
+
+## output files:
+### RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc (usearch standard results table);
+### RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq (sequences that did not hit the gg db and need to be clustered de novo)
+### gg_97_rep_set_matched.fa (gg 97_rep_set matches to our dataset - add to MASTER OTU rep. sequences)
+
+### vii.  De novo OTU picking using uclust:  cluster sequences at 97% identity (includes chimera checking with uparse)
+usearch -cluster_otus RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -minsize 2 -otus DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa -relabel OTU_dn_ -sizeout -uparseout DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up
+
+## output files:
+### DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa (representative sequences for de novo OTUs)
+### DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up (uparse standard results table)
+
+### viii.  Combine ref-based and de novo representative OTU sequences into one master OTU "db" file.
+cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa > MASTER_RepSeqs.fa
+
+
+### ix.  Map all sequences (pre-dereplication) back to OTU definitions using usearch_global.  Any sequences that do not hit the new OTU database are discarded.
+usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -otutabout MASTER_OTU_table.txt -biomout MASTER_OTU_bm.biom
+
+## output files:
+### MASTER_OTU_map.uc (usearch standard results file)
+### MASTER_OTU_table.txt (standard OTU table)
+### MASTER_OTU_bm.biom (standard biom-formatted table - jason)
+# _______________________________________________________________________#
+# PBS stats
+cat ${PBS_NODEFILE}
+env | grep PBS
+qstat -f ${PBS_JOBID}

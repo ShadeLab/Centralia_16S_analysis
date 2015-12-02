@@ -163,7 +163,10 @@ usearch -cluster_otus RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.
 cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa > MASTER_RepSeqs.fa
 ```
 
-### ix.  Map all sequences (pre-dereplication) back to OTU definitions using usearch_global.  Any OTUs that do not hit the new OTU database are discarded
+### ix.  Map all sequences (pre-dereplication) back to OTU definitions using usearch_global.  Any sequences that do not hit the new OTU database are discarded.
 
 ```
-usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -otutabout MASTER_OTU_table.txt
+usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -otutabout MASTER_OTU_table.txt -biomout MASTER_OTU_bm.biom
+```
+
+### x.  
