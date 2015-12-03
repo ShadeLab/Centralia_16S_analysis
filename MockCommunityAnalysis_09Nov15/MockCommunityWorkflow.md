@@ -128,10 +128,10 @@ usearch -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq deno
 ### vi.  Remove sequences that match 100% to our craptaminant database
 
 ```
-usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -relabel crapOTU_ -sizeout -uparseout craptaminant_otu_results.txt
+usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus
+
 
 ## output files:
-### craptaminant_otu_results.txt;
 ### craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa;
 ### nocrap_denoised_nosigs_uniques_combined_merged.fastq
 ```

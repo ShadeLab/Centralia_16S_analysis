@@ -29,7 +29,7 @@ alias usearch='/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64'
 # COPY of gg 97 rep set: 97_otus.fasta
 # File of renaming conventions:  rename.txt
 # Names of paired ends:  merge_fq_list.txt
-# craptaminant db
+# craptaminant db: mock_craptaminant_OTU_db.fa
 
 
 ### i.  Copy needed raw fastq files
@@ -92,15 +92,14 @@ usearch -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq deno
 ### denoised_nosigs_uniques_combined_merged.fastq
 
 ### vi.  Remove sequences that match 100% to our craptaminant database
-usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -relabel crapOTU_ -sizeout -uparseout craptaminant_otu_results.txt
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -matchedfq craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq
 
 ## output files:
-### craptaminant_otu_results.txt;
 ### craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa;
 ### nocrap_denoised_nosigs_uniques_combined_merged.fastq
 
 ### vi.  Reference-based OTU picking using usearch_global: Cluster sequences at 97% identity to the greengenes database, version 13.8
-usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
+usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db 97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
 
 ## output files:
 ### RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc (usearch standard results table);

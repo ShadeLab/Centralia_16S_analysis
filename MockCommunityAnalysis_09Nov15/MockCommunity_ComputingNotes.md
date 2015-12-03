@@ -896,7 +896,7 @@ cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_
 alias usearch='/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64'
 ```
 
-### 03 Dec 2015
+### 02 Dec 2015
 * Re-ran the OTU mapping with the gg/de_novo database
 *  Results:  30K sequences - this makes quite a bigger difference in reducing the OTUs because it uses longer sequences from the gg db as the reference rather than the dataset (duh) which is more appropriate/ correct.  We have ~30K OTUs, which is more in line with what we should expect from the literature
 ```
@@ -907,3 +907,14 @@ grep -c "^>" MASTER_RepSeqs.fa
 30067
 ```
 * Now, it is time to start with a clean slate, re-run the analysis, and reproduce the results, starting from the work with the full dataset.
+
+### 02 Dec 2015
+* results from the re-run of the workflow:
+* 30056 OTUs in the MASTER_RepSeqs.fa file: 9144 gg OTUs + 20912 de novo OTUs
+* 29946 rows in the OTU table.
+* 194543 chimera detected in the de novo clustering:
+
+```
+grep -c "chimera" DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up
+194543
+```
