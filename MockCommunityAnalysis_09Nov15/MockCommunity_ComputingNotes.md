@@ -908,13 +908,23 @@ grep -c "^>" MASTER_RepSeqs.fa
 ```
 * Now, it is time to start with a clean slate, re-run the analysis, and reproduce the results, starting from the work with the full dataset.
 
-### 02 Dec 2015
-* results from the re-run of the workflow:
+### 03 Dec 2015
+* results from the second run (with file management revisions in the beginning for batch scripting) of the workflow:
 * 30056 OTUs in the MASTER_RepSeqs.fa file: 9144 gg OTUs + 20912 de novo OTUs
-* 29946 rows in the OTU table.
-* 194543 chimera detected in the de novo clustering:
+* 29946 rows in the OTU table.  Perhaps ultimate singleton sequences are by default omitted?  Not sure why the discrepancy between the .fa db and the actual OTU table rows.
+* 194543 chimera sequences detected in the de novo clustering:
 
 ```
 grep -c "chimera" DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up
 194543
 ```
+* These results seem quite reasonable as far as expected OTU numbers.  Now, to assign taxonomy to the rep sequences, and try the whole script from scratch.
+
+```
+module load RDPClassifier/2.9
+
+java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o MASTER_OTU_classified.txt -h otu_hier.txt MASTER_RepSeqs.fa
+```
+* note:  the classifier confidence option '-c' default is 0.8, but we are using 0.5.  Perhaps this will improve putative assignments?  anyway, we have to be careful about assignments with confidence < 0.8.  Maybe change it back to default?
+* okay, now will try to run the entire batch script from merging to assigning taxonomy, w/ first estimate of 6 hr wall time w/ 264 Gb and 8 ppn
+* note about taxonomy - using the RDP classifier with the RDP database may not be awesome.  there is also the greengenes (gg_13_8_otus/taxonomy/97_otu_taxonomy.txt) file that we can use for the gg assignments.  What, then, do we use for the de novo assignemnts?

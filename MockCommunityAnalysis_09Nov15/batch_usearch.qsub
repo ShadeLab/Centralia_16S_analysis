@@ -124,7 +124,16 @@ usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plu
 ### MASTER_OTU_map.uc (usearch standard results file)
 ### MASTER_OTU_table.txt (standard OTU table)
 ### MASTER_OTU_bm.biom (standard biom-formatted table - jason)
-# _______________________________________________________________________#
+#
+module load RDPClassifier/2.9
+
+java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o MASTER_OTU_classified.txt -h otu_hier.txt MASTER_RepSeqs.fa
+
+## output files:
+### otu_hier.txt
+### MASTER_OTU_classified.txt
+
+ _______________________________________________________________________#
 # PBS stats
 cat ${PBS_NODEFILE}
 env | grep PBS
