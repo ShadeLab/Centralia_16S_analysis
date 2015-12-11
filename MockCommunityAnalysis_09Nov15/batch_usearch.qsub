@@ -60,7 +60,6 @@ done
 
 ### ii.  Pool all merged-paired ends across samples
 mv rename.txt ..
-cd ..
 
 find ./mergedfastq -type f -name '*fastq' -exec cat '{}' > combined_merged.fastq ';'
 

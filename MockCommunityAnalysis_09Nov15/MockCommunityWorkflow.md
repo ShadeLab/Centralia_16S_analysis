@@ -169,4 +169,14 @@ cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_
 usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -otutabout MASTER_OTU_table.txt -biomout MASTER_OTU_bm.biom
 ```
 
-### x.  
+### x.  Taxonomic assignment using RDP Classifier
+```
+module load RDPClassifier/2.9
+
+
+java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o MASTER_OTU_classified.txt -h otu_hier.txt MASTER_RepSeqs.fa
+
+## output files:
+### otu_hier.txt
+### MASTER_OTU_classified.txt
+```
