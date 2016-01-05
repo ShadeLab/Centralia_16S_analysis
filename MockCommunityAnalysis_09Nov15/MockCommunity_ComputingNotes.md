@@ -928,3 +928,75 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o MASTER_OTU_classified.
 * note:  the classifier confidence option '-c' default is 0.8, but we are using 0.5.  Perhaps this will improve putative assignments?  anyway, we have to be careful about assignments with confidence < 0.8.  Maybe change it back to default?
 * okay, now will try to run the entire batch script from merging to assigning taxonomy, w/ first estimate of 6 hr wall time w/ 264 Gb and 8 ppn
 * note about taxonomy - using the RDP classifier with the RDP database may not be awesome.  there is also the greengenes (gg_13_8_otus/taxonomy/97_otu_taxonomy.txt) file that we can use for the gg assignments.  What, then, do we use for the de novo assignemnts?
+
+### 04 Jan 2016
+* Try the RDP classified with higher confidence score by changing -c 0.5 to -c 0.8
+
+```
+module load RDPClassifier/2.9
+
+java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.8 -o MASTER_OTU_classified.txt -h otu_hier_c8.txt MASTER_RepSeqs.fa
+```
+
+* maybe we can re-train classifier independently?
+```
+module load RDPClassifier/2.9
+
+java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.8 -o MASTER_OTU_classified.txt -h otu_hier_gg_c8.txt -h /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -t /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta MASTER_RepSeqs.fa
+
+```
+
+
+* Can we move into QIIME from this step?  The HPCC has downgraded QIIME from 1.9.0 to 1.8.0, which is okay for our classification purposes
+* --id_to_taxonomy_fp is designated by -t
+* --reference_seqs_fp is designated by -r
+* export 2.2 (older version, default with QIIME) OR 2.9
+* this works!
+```
+module load QIIME/1.8.0
+
+#export path to Classifier 2.2
+export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-release/rdp_classifier-2.2.jar
+
+#export path to classifier 2.9
+export RDP_JAR_PATH=/opt/software/RDPClassifier/2.9/dist/rdp_classifier-2.9.jar
+
+#use QIIME to assign taxonomy
+assign_taxonomy.py -i MASTER_RepSeqs.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta
+```
+* Add QIIME header to taxonomy file and append the taxonomy metadata to .biom file
+
+```
+echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
+
+cat  templine.txt rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.txt >> rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments_header.txt
+
+biom add-metadata -i MASTER_OTU_bm.biom -o MASTER_OTU_bm_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments_header.txt
+
+rm templine.txt
+```
+* here:  insert other metadata to the .biom file (?)
+
+* Moving on to the fun part?  Diversity and ecological analyses
+
+```
+biom summarize_table -i MASTER_OTU_bm_rdp.biom -o summary_MASTER_OTU_bm_rdp.txt
+
+more summary_MASTER_OTU_bm_rdp.txt
+
+Num samples: 54
+Num observations: 9144
+Total count: 5673035
+Table density (fraction of non-zero values): 0.312
+Table md5 (unzipped): f290dae037cb0687eea2ceefe21f4f77
+
+Counts/sample summary:
+ Min: 40810.0
+ Max: 215801.0
+ Median: 105780.000
+ Mean: 105056.204
+ Std. dev.: 26750.447
+ Sample Metadata Categories: None provided
+ Observation Metadata Categories: taxonomy; confidence
+ ```
+ * Problem:  the mock community still has a lot of sequences in it?  This means that the sequences in the mock community were very similar to the sequences in the actual dataset, after removing craptaminants?

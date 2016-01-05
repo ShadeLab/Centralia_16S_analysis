@@ -124,13 +124,29 @@ usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plu
 ### MASTER_OTU_table.txt (standard OTU table)
 ### MASTER_OTU_bm.biom (standard biom-formatted table - jason)
 #
-module load RDPClassifier/2.9
 
-java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o MASTER_OTU_classified.txt -h otu_hier.txt MASTER_RepSeqs.fa
+###x.  Classified sequences using the RDP Classifier v. 2.9 with the greenegenes 97% OTU database v. 13.8; classifier re-training and assignment uses the QIIME v 1.8.0 assign_taxonomy.py workflow
+module load QIIME/1.8.0
 
-## output files:
-### otu_hier.txt
-### MASTER_OTU_classified.txt
+#export HPCC path to classifier 2.9
+export RDP_JAR_PATH=/opt/software/RDPClassifier/2.9/dist/rdp_classifier-2.9.jar
+
+#use QIIME RDP Classifier to assign taxonomy with greengenes database
+assign_taxonomy.py -i MASTER_RepSeqs.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta
+
+#add taxonomy as metadata to biom table
+echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
+
+cat  templine.txt rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.txt >> rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments_header.txt
+
+biom add-metadata -i MASTER_OTU_bm.biom -o MASTER_OTU_bm_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments_header.txt
+
+## output files
+### rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.log
+### rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.txt
+### rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignment)header.txt
+### MASTER_OTU_bm_rdp.biom
+
 
  _______________________________________________________________________#
 # PBS stats
