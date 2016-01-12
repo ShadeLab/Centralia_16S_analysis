@@ -925,9 +925,9 @@ module load RDPClassifier/2.9
 
 java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o MASTER_OTU_classified.txt -h otu_hier.txt MASTER_RepSeqs.fa
 ```
-* note:  the classifier confidence option '-c' default is 0.8, but we are using 0.5.  Perhaps this will improve putative assignments?  anyway, we have to be careful about assignments with confidence < 0.8.  Maybe change it back to default?
+* note:  the classifier confidence option '-c' default is 0.8, but we are using 0.5.  Perhaps this will improve putative assignments?  anyway, we have to be careful about assignments with confidence < 0.8.
 * okay, now will try to run the entire batch script from merging to assigning taxonomy, w/ first estimate of 6 hr wall time w/ 264 Gb and 8 ppn
-* note about taxonomy - using the RDP classifier with the RDP database may not be awesome.  there is also the greengenes (gg_13_8_otus/taxonomy/97_otu_taxonomy.txt) file that we can use for the gg assignments.  What, then, do we use for the de novo assignemnts?
+* note about taxonomy - using the RDP classifier with the RDP database may not be awesome.  there is also the greengenes (gg_13_8_otus/taxonomy/97_otu_taxonomy.txt) file that we can use for the gg assignments.  What, then, do we use for the de novo assignemnts?  The best hit ot the gg database may be okay.
 
 ### 04 Jan 2016
 * Try the RDP classified with higher confidence score by changing -c 0.5 to -c 0.8
@@ -939,6 +939,7 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.8 -o MASTER_OTU_classified.
 ```
 
 * maybe we can re-train classifier independently?
+* this is a multi-step process, tutorial is not straightforward...QIIME already has a built-in workflow for classifier re-training, and maybe we can move into qiime and use that instead of piece-meal re-training the Classifier
 ```
 module load RDPClassifier/2.9
 
@@ -950,7 +951,7 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.8 -o MASTER_OTU_classified.
 * Can we move into QIIME from this step?  The HPCC has downgraded QIIME from 1.9.0 to 1.8.0, which is okay for our classification purposes
 * --id_to_taxonomy_fp is designated by -t
 * --reference_seqs_fp is designated by -r
-* export 2.2 (older version, default with QIIME) OR 2.9
+* export 2.2 (older version, default with QIIME) OR 2.9 - try to use 2.9
 * this works!
 ```
 module load QIIME/1.8.0
@@ -958,8 +959,10 @@ module load QIIME/1.8.0
 #export path to Classifier 2.2
 export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-release/rdp_classifier-2.2.jar
 
-#export path to classifier 2.9
+#export path to Classifier 2.9
 export RDP_JAR_PATH=/opt/software/RDPClassifier/2.9/dist/rdp_classifier-2.9.jar
+
+RDP_JAR_PATH=/opt/software/RDPClassifier/2.11/dist/rdp_classifier-2.11.jar
 
 #use QIIME to assign taxonomy
 assign_taxonomy.py -i MASTER_RepSeqs.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta
@@ -980,8 +983,11 @@ rm templine.txt
 * Moving on to the fun part?  Diversity and ecological analyses
 
 ```
-biom summarize_table -i MASTER_OTU_bm_rdp.biom -o summary_MASTER_OTU_bm_rdp.txt
+mkdir mkdir QIIME_1_8_0/
 
+biom summarize_table -i MASTER_OTU_bm_rdp.biom -o QIIME_1_8_0/summary_MASTER_OTU_bm_rdp.txt
+
+cd QIIME_1_8_0/
 more summary_MASTER_OTU_bm_rdp.txt
 
 Num samples: 54
@@ -998,5 +1004,33 @@ Counts/sample summary:
  Std. dev.: 26750.447
  Sample Metadata Categories: None provided
  Observation Metadata Categories: taxonomy; confidence
+```
+
+```
+ cd ..
+
+ single_rarefaction.py -i MASTER_OTU_bm_rdp.biom -o QIIME_1_8_0/MASTER_OTU_bm_rdp_even40810.biom -d 40810
+
+ biom summarize_table -i QIIME_1_8_0/MASTER_OTU_bm_rdp_even40810.biom -o QIIME_1_8_0/summary_MASTER_OTU_bm_rdp_even40810.txt
  ```
- * Problem:  the mock community still has a lot of sequences in it?  This means that the sequences in the mock community were very similar to the sequences in the actual dataset, after removing craptaminants?
+ * Problem:  the mock community still has a lot of sequences in it (215,801 sequences)?  This means that the sequences in the mock community were very similar to the sequences in the actual dataset, after removing craptaminants?  Keep this in mind, and check the number of OTUs that are ultimately assigned to this community.  It should be tens.
+
+ * Next steps:  
+ 1.  subsample to understand variability between DNA extraction replicates
+ 2.  collapse and subsample to move forward with analysis
+
+ * Another problem -where did sample C01D01 go?  did we lose it in re-naming?  We have only 54 samples, and with the mock we should have 55...?  Opps - the sample ID was accidentally truncated in the merge_fq_list.txt file.  This means that we have to run the whole analysis again with the corrected file.  Will correct and re-run the qsub tonight.
+
+ ### 06 Jan 2016
+ * Error message returned on classifier 2.9 when running batch qsub:
+* No error when running classifier 2.0 - what is going on?
+```
+ File
+ "/opt/software/QIIME/1.8.0--GCC-4.4.5/lib/python2.7/site-packages/qiime/pycogent_backports/rdp_classifier.py", line 509, in train_rdp_classifier_and_assign_taxonomy
+  tmp_dir=tmp_dir)
+File "/opt/software/QIIME/1.8.0--GCC-4.4.5/lib/python2.7/site-packages/qiime/pycogent_backports/rdp_classifier.py", line 479, in train_rdp_classifier
+  return app(training_seqs_file)
+File "/opt/software/QIIME/1.8.0--GCC-4.4.5/lib/python2.7/site-packages/qiime/pycogent_backports/rdp_classifier.py", line 339, in __call__
+  raise ApplicationError(exception_msg + stderr_msg)
+cogent.app.util.ApplicationError: Training output file "/tmp/RdpTrainer_GBBHTo/bergeyTrainingTree.xml" not found.  This may happen if an error occurred during the RDP training process.  More details may be available in the standard error, printed below.
+```

@@ -141,6 +141,8 @@ cat  templine.txt rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.txt >> rd
 
 biom add-metadata -i MASTER_OTU_bm.biom -o MASTER_OTU_bm_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments_header.txt
 
+rm templine.txt
+
 ## output files
 ### rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.log
 ### rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.txt
