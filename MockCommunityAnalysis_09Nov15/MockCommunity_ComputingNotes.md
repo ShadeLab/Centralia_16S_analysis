@@ -962,7 +962,6 @@ export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-relea
 #export path to Classifier 2.9
 export RDP_JAR_PATH=/opt/software/RDPClassifier/2.9/dist/rdp_classifier-2.9.jar
 
-RDP_JAR_PATH=/opt/software/RDPClassifier/2.11/dist/rdp_classifier-2.11.jar
 
 #use QIIME to assign taxonomy
 assign_taxonomy.py -i MASTER_RepSeqs.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta
@@ -1034,3 +1033,11 @@ File "/opt/software/QIIME/1.8.0--GCC-4.4.5/lib/python2.7/site-packages/qiime/pyc
   raise ApplicationError(exception_msg + stderr_msg)
 cogent.app.util.ApplicationError: Training output file "/tmp/RdpTrainer_GBBHTo/bergeyTrainingTree.xml" not found.  This may happen if an error occurred during the RDP training process.  More details may be available in the standard error, printed below.
 ```
+### 12 January 2016
+* Contributions from Sang-Hoon Lee
+* Compare the Silva Alignment to the GreeneGenes 97 Alignment for pynast in QIIME.  The Silva Alignment is supposed to be more accurate than the greengenes alignment, (but potentially less complete.)
+* the gg alignment has no failures, the silva alignment has 22
+* We BLASTed the very first alignment failure included low identity (~70%) to two divergent lineages: Candidatus Odyssella thessalonicensis L13 HMO_scaffold00002 (WGS), and Azospirillum lipoferum 4B plasmid AZO_p1 complete genome; this suggests that these are missed chimeras and should be removed.  BLAST against the gg database via web browser confirms this.  Let's spot check a few more...
+* What are the assignments given with RDP Classifier?  We used the RDP classifier and found that 16/22 failed-to-align sequences are archaea, but that they are assigned with high confidence at the family/genus level.  The remaining failures are Gammaproteobacteria belonging to the obligate endosymbiont Candidatus Carsonella family - some of these have low confidence (22, 54%).  These Carsonella sequences may be appropriate to remove, but now I am unsure about the rest.  
+* Jim Cole suggested: " Sequences that fail our aligner are usually either not 16S, are grossly aberrant, or chimeras. Our Classifier isn't really great at detecting novelty. I'd suggest running these through SequenceMatch and see how distant they are from any knows." - so, we will take his advice and align them with the RDP aligner and also check SequenceMatch to get an idea about divergence.
+* How abundant are these in the dataset?

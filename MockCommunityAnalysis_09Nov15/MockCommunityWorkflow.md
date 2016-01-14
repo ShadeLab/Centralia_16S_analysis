@@ -8,7 +8,7 @@ research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_B_16S_PE/Mock_Cmty_TC
 * Mock_Cmty_TCCTCTGTCGAC_L001_R1_001.fastq.gz
 * Mock_Cmty_TCCTCTGTCGAC_L001_R2_001.fastq.gz
 
-### Merge paired ends and quality filtering
+### Merge paired ends and quality filtering with usearch 8.1
 ```
 usearch -fastq_mergepairs Mock_Cmty_TCCTCTGTCGAC_L001_R1_001.fastq -fastqout Mock.fastq -relabel @ -fastq_merge_maxee 1.0 -fastq_minmergelen 250 -fastq_maxmergelen 274 -fastq_nostagger
 
@@ -186,8 +186,8 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.8 -o MASTER_OTU_classified.
 ```
 module load QIIME/1.8.0
 
-#export HPCC path to classifier 2.9
-export RDP_JAR_PATH=/opt/software/RDPClassifier/2.9/dist/rdp_classifier-2.9.jar
+#export HPCC path to classifier 2.2
+export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-release/rdp_classifier-2.2.jar
 
 #use QIIME RDP Classifier to assign greengenes taxonomy
 assign_taxonomy.py -i MASTER_RepSeqs.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta
@@ -197,7 +197,7 @@ echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
 
 cat  templine.txt rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.txt >> rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments_header.txt
 
-biom add-metadata -i MASTER_OTU_bm.biom -o MASTER_OTU_bm_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments_header.txt
+biom add-metadata -i MASTER_OTU_bm.biom -o MASTER_OTU_bm_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy2.0/MASTER_RepSeqs_tax_assignments_header.txt
 
 rm templine.txt
 
