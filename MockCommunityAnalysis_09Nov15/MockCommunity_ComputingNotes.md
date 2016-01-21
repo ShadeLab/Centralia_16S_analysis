@@ -1018,11 +1018,11 @@ Counts/sample summary:
  1.  subsample to understand variability between DNA extraction replicates
  2.  collapse and subsample to move forward with analysis
 
- * Another problem -where did sample C01D01 go?  did we lose it in re-naming?  We have only 54 samples, and with the mock we should have 55...?  Opps - the sample ID was accidentally truncated in the merge_fq_list.txt file.  This means that we have to run the whole analysis again with the corrected file.  Will correct and re-run the qsub tonight.
+ * Another problem -where did sample C01D01 go?  did we lose it in re-naming?  We have only 54 samples, and with the mock we should have 55...?  Opps - the sample ID was accidentally truncated in the merge_fq_list.txt file.  This means that we have to run the whole analysis again with the corrected file.  Will correct and re-run the qsub tonight.  
 
  ### 06 Jan 2016
  * Error message returned on classifier 2.9 when running batch qsub:
-* No error when running classifier 2.0 - what is going on?
+* No error when running classifier 2.2 - what is going on?
 ```
  File
  "/opt/software/QIIME/1.8.0--GCC-4.4.5/lib/python2.7/site-packages/qiime/pycogent_backports/rdp_classifier.py", line 509, in train_rdp_classifier_and_assign_taxonomy
@@ -1033,11 +1033,14 @@ File "/opt/software/QIIME/1.8.0--GCC-4.4.5/lib/python2.7/site-packages/qiime/pyc
   raise ApplicationError(exception_msg + stderr_msg)
 cogent.app.util.ApplicationError: Training output file "/tmp/RdpTrainer_GBBHTo/bergeyTrainingTree.xml" not found.  This may happen if an error occurred during the RDP training process.  More details may be available in the standard error, printed below.
 ```
-### 12 January 2016
+### 21 January 2016
 * Contributions from Sang-Hoon Lee
-* Compare the Silva Alignment to the GreeneGenes 97 Alignment for pynast in QIIME.  The Silva Alignment is supposed to be more accurate than the greengenes alignment, (but potentially less complete.)
-* the gg alignment has no failures, the silva alignment has 22
-* We BLASTed the very first alignment failure included low identity (~70%) to two divergent lineages: Candidatus Odyssella thessalonicensis L13 HMO_scaffold00002 (WGS), and Azospirillum lipoferum 4B plasmid AZO_p1 complete genome; this suggests that these are missed chimeras and should be removed.  BLAST against the gg database via web browser confirms this.  Let's spot check a few more...
-* What are the assignments given with RDP Classifier?  We used the RDP classifier and found that 16/22 failed-to-align sequences are archaea, but that they are assigned with high confidence at the family/genus level.  The remaining failures are Gammaproteobacteria belonging to the obligate endosymbiont Candidatus Carsonella family - some of these have low confidence (22, 54%).  These Carsonella sequences may be appropriate to remove, but now I am unsure about the rest.  
-* Jim Cole suggested: " Sequences that fail our aligner are usually either not 16S, are grossly aberrant, or chimeras. Our Classifier isn't really great at detecting novelty. I'd suggest running these through SequenceMatch and see how distant they are from any knows." - so, we will take his advice and align them with the RDP aligner and also check SequenceMatch to get an idea about divergence.
-* How abundant are these in the dataset?
+* Compare the Silva Alignment version 111 (97_Silva_111_rep_set.fasta) to the GreeneGenes 97% sequence identity alignment for pynast aligner in QIIME 1.8.0.  The Silva Alignment is supposed to be higher quality than the greengenes alignment.  Note that this is an older version of the aligner and Sang-Hoon doesn't remember where he downloaded it from.  The most recent version is v.123, and I would like to use that moving forward.
+*  Both alignments have comparable results as far as #failures.  For the Silva alignment, 6 GG reference OTUs (full length) fail, and ~1800 de novo OTUs.  For the greenegenes alignment, no GG reference OTUs, but ~1800 de novo OTU failures, similar to the Silva.  I would like to use the Silva alignment because it is higher quality and the results are comparable.
+*  We will filter these alignment failures from the MASTER rep set of sequences and from the BIOM table before proceeding.
+*  We got the newest Silva alignment from the mothur website: http://mothur.org/wiki/Silva_reference_files, and it is here on the HPCC
+
+```
+/mnt/research/ShadeLab/WorkingSpace/Silva_v123_referencefiles
+```
+* Note that QIIME 1.8.0 will [no longer be supported after Jan 2016](https://qiime.wordpress.com/2015/10/30/toward-qiime-2/), only 1.9.1 from here on out.
