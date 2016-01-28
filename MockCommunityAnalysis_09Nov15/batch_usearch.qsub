@@ -26,7 +26,6 @@ alias usearch='/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64'
 ### /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus
 
 ## FILES THAT MUST BE IN THE WORKING directory
-# COPY of gg 97 rep set: 97_otus.fasta
 # File of renaming conventions:  rename.txt
 # Names of paired ends:  merge_fq_list.txt
 # craptaminant db: mock_craptaminant_OTU_db.fa
@@ -91,14 +90,17 @@ usearch -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq deno
 ### denoised_nosigs_uniques_combined_merged.fastq
 
 ### vi.  Remove sequences that match 100% to our craptaminant database
-/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -matchedfq craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq
+usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -matchedfq craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq
 
 ## output files:
 ### craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa;
 ### nocrap_denoised_nosigs_uniques_combined_merged.fastq
 
 ### vi.  Reference-based OTU picking using usearch_global: Cluster sequences at 97% identity to the greengenes database, version 13.8
-usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db 97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
+usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
+
+#if part vi (craptaminant removal) is skipped, use line below
+#usearch -usearch_global denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
 
 ## output files:
 ### RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc (usearch standard results table);
@@ -125,7 +127,13 @@ usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plu
 ### MASTER_OTU_bm.biom (standard biom-formatted table - jason)
 #
 
-###x.  Classified sequences using the RDP Classifier v. 2.0 with the greenegenes 97% OTU database v. 13.8; classifier re-training and assignment uses the QIIME v 1.8.0 assign_taxonomy.py workflow
+###xi Align sequences to the Silva v 123 template using QIIME 1.8.0
+module load QIIME/1.8.0
+
+align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/WorkingSpace/Silva_v123_referencefiles/silva.nr_v123.align
+
+
+###xii.  Classified sequences using the RDP Classifier v. 2.0 with the greenegenes 97% OTU database v. 13.8; classifier re-training and assignment uses the QIIME v 1.8.0 assign_taxonomy.py workflow
 module load QIIME/1.8.0
 
 #export HPCC path to Classifier 2.2

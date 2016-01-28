@@ -1036,11 +1036,55 @@ cogent.app.util.ApplicationError: Training output file "/tmp/RdpTrainer_GBBHTo/b
 ### 21 January 2016
 * Contributions from Sang-Hoon Lee
 * Compare the Silva Alignment version 111 (97_Silva_111_rep_set.fasta) to the GreeneGenes 97% sequence identity alignment for pynast aligner in QIIME 1.8.0.  The Silva Alignment is supposed to be higher quality than the greengenes alignment.  Note that this is an older version of the aligner and Sang-Hoon doesn't remember where he downloaded it from.  The most recent version is v.123, and I would like to use that moving forward.
-*  Both alignments have comparable results as far as #failures.  For the Silva alignment, 6 GG reference OTUs (full length) fail, and ~1800 de novo OTUs.  For the greenegenes alignment, no GG reference OTUs, but ~1800 de novo OTU failures, similar to the Silva.  I would like to use the Silva alignment because it is higher quality and the results are comparable.
+*  Both alignments have comparable results as far as failures.  For the Silva alignment, 6 GG reference OTUs (full length) fail, and ~1800 de novo OTUs.  For the greenegenes alignment, no GG reference OTUs, but ~1800 de novo OTU failures, similar to the Silva.  I would like to use the Silva alignment because it is higher quality and the results are comparable.
 *  We will filter these alignment failures from the MASTER rep set of sequences and from the BIOM table before proceeding.
 *  We got the newest Silva alignment from the mothur website: http://mothur.org/wiki/Silva_reference_files, and it is here on the HPCC
 
 ```
 /mnt/research/ShadeLab/WorkingSpace/Silva_v123_referencefiles
 ```
-* Note that QIIME 1.8.0 will [no longer be supported after Jan 2016](https://qiime.wordpress.com/2015/10/30/toward-qiime-2/), only 1.9.1 from here on out.
+* Note that QIIME 1.8.0 will [no longer be supported after Jan 2016](https://qiime.wordpress.com/2015/10/30/toward-qiime-2/), only 1.9.1 from here on out.  We've used anaconda on the HPCC to install python2 packages so that we can use QIIME 1.9.0, which will continue to be supported for a bit.
+
+### 27 January 2016
+* Moving onward! I started a job to compare the results between removing "craptaminant" OTUs and not
+* Back to the problem of qiime and alignment failures and version problems and problems with adding assigned taxonomy to the biom table format   
+  *  We removed the usearch option to include OTU size at the cluster_otus step, which alleviated some downstream formatting challenges
+  *  We now have access to qiime 1.9.1, which also is supposed to play nicely with classifier 2.9.  I can't get this to work, but I can get it to use the qiime default classifier 2.2.
+  *  I started one alignment job using QIIME 1.8.0 and the exact same job with QIIME 1.9.1 and the anaconda wrapper.  The point of this is just to see if we can get QIIME 1.9.1 into our pipeline.
+
+
+```
+#Alignment with QIIME 1.8.0
+module load QIIME/1.8.0
+
+align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/WorkingSpace/Silva_v123_referencefiles/silva.nr_v123.align
+
+
+#Alignment with QIIME 1.9.1
+source /mnt/research/ShadeLab/software/loadanaconda2.sh
+
+align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/WorkingSpace/Silva_v123_referencefiles/silva.nr_v123.align -o qiime1.9.1_pynast_aligned/
+```
+* the qiime 1.9.1 pynast alignment to the Silva123 template failed.
+* the qiime 1.8.0 pynast alignment to the Silva 123 template failed.  I think the Silva123 template is the problem, and I have gotten a different one from the QIIME forum.  I will move this to the HPCC and start again.  It's PATH is here:
+
+```
+/mnt/research/ShadeLab/SharedResources/SILVA123_QIIME_release/core_alignment/core_alignment_SILVA123.fasta
+```
+
+
+* The rdp classification within qiime 1.9.1 using rdp 2.9 to the greengenes reference failed.  I thnk the problem is that QIIME 1.9.1 cannot find the RDP 2.9.
+
+* now, we need to figure out how to make a biom table from our usearch pieces.  We need an OTU map
+
+```
+module load QIIME/1.8.0
+
+align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SILVA123_QIIME_release/core_alignment/core_alignment_SILVA123.fasta -o qiime189_pynast_silva123/
+
+
+#Alignment with QIIME 1.9.1
+source /mnt/research/ShadeLab/software/loadanaconda2.sh
+
+align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SILVA123_QIIME_release/core_alignment/core_alignment_SILVA123.fasta -o qiime191_pynast_silva123/
+```
