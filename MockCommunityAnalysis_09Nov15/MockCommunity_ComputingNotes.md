@@ -1066,7 +1066,7 @@ source /mnt/research/ShadeLab/software/loadanaconda2.sh
 align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/WorkingSpace/Silva_v123_referencefiles/silva.nr_v123.align -o qiime1.9.1_pynast_aligned/
 ```
 * the qiime 1.9.1 pynast alignment to the Silva123 template failed.
-* the qiime 1.8.0 pynast alignment to the Silva 123 template failed.  I think the Silva123 template is the problem, and I have gotten a different one from the QIIME forum.  I will move this to the HPCC and start again.  It's PATH is here:
+* the qiime 1.8.0 pynast alignment to the Silva 123 template failed.  I think the Silva123 template is the problem (Sang-Hoon got it from mothur, and I think the formatting is off), and I have gotten a different one from the QIIME forum.  I will move this to the HPCC and start again.  It's PATH is here:
 
 ```
 /mnt/research/ShadeLab/SharedResources/SILVA123_QIIME_release/core_alignment/core_alignment_SILVA123.fasta
@@ -1087,4 +1087,74 @@ align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SIL
 source /mnt/research/ShadeLab/software/loadanaconda2.sh
 
 align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SILVA123_QIIME_release/core_alignment/core_alignment_SILVA123.fasta -o qiime191_pynast_silva123/
+```
+
+### 29 Jan 2016
+* The alignment against the Silva v123 template is equivalent for QIIME 1.8.0 and 1.9.1 - not surprising because the pynast algorithm is the same.  The good news is that the new QIIME 1.9.1 ShadeLAb install with anaconda is working!
+|QIIME v    | 1.8.0 HPCC install  | 1.9.1 Anaconda install   |
+| :------------- | :-------------: |-------------: |
+| template      | silva 123      |silva 123      |
+| total aligned     | 28887      |28887     |
+| de novo aligned      | 19718      |19718        |
+| total failed      | 1331      |1331        |
+| de novo failed      | 1325      |1325      |
+
+* We have 6 gg OTUs that fail to align to the silva v123 template - these should be noted in the manuscript.  They are:
+| GG OTU ID     |
+| :-------------: |
+| 1837676       |
+| 2041715      |
+| 2041722      |
+| 4104788      |
+| 4151783      |
+| 4466966       |
+
+* moved gg database into SharedResources directory
+PATH: /mnt/research/ShadeLab/SharedResources/gg_13_8_otus
+
+### 01 Feb 2016
+* Working with the new uparse biom table to move into QIIME.  Must convert the jsn format to HD5, filter failed alignments from OTU table and MASTER_Rep_Seqs file to move on
+```
+biom convert -i MASTER_OTU_bm.biom -o MASTER_OTU_hdf5.biom --table-type="BIOM table" --to-hdf5
+```
+* filted failed alignments from OTU table.
+```
+filter_otus_from_otu_table.py -i MASTER_OTU_hdf5.biom -o MASTER_OTU_hdf5_filteredfailedalignments.biom -e qiime191_pynast_silva123/MASTER_RepSeqs_failures.fasta
+```
+* filtering the failed-to-align sequences reduced the total sequence count from 8,326,877 to 8,291,763.  Removed ~30K sequences.
+```
+filter_fasta.py -f MASTER_RepSeqs.fa -o MASTER_RepSeqs_filteredfailedalignments.fa -a qiime191_pynast_silva123/MASTER_RepSeqs_aligned.fasta
+```
+* filtering the failed-to-align sequences reduced the rep sequence count (no. OTUs) from 30218 to 28887 rep. seqs.
+* now, try again to assign taxonomy using RDP but within the QIIME 1.9.1 environment.  We need to export the path to RDP classifier 2.2 (2.9 is still not working, but the changes are mostly in the database, so it should be okay to use the 2.2 algorithm with the greengenes database)
+
+```
+module load RDPClassifier/2.2
+
+export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-release/rdp_classifier-2.2.jar
+
+assign_taxonomy.py -i MASTER_RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -o rdp_assigned_taxonomy22/
+```
+
+* add taxonomy assignments to biom table; note that there as was a bug in the biom add-metadata command that requires additional options (--sc-separated taxonomy and --obervation-header OTUID, taxonomy); this, incombo with the jasn-to-hdf5 convserion, was the cause of our previous formatting problems.
+```
+echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
+
+cat  templine.txt rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt
+
+biom add-metadata -i MASTER_OTU_hdf5_filteredfailedalignments.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
+
+```
+
+* summarize the full biom table (to assess variability in technical replicates)
+```
+# subsample to even (53116.0 minimum observed sequences in sample C03D02)
+single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_even53116.biom -d 53116
+```
+
+* collapse table to combine all technical reps into one sample
+```
+collapse_samples.py -b MASTER_OTU_hdf5_rdp.biom -m Centralia_Full_Map.txt --output_biom_fp MASTER_OTU_hdf5_rdp_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields GPS_pt
+
+biom summarize_table -i MASTER_OTU_hdf5_rdp_collapse.biom -o MASTER_OTU_hdf5_rdp_collapse_summary.txt
 ```

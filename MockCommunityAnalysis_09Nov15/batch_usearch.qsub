@@ -97,7 +97,7 @@ usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_cra
 ### nocrap_denoised_nosigs_uniques_combined_merged.fastq
 
 ### vi.  Reference-based OTU picking using usearch_global: Cluster sequences at 97% identity to the greengenes database, version 13.8
-usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
+usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
 
 #if part vi (craptaminant removal) is skipped, use line below
 #usearch -usearch_global denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
@@ -107,7 +107,7 @@ usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id
 ### RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq (sequences that did not hit the gg db and need to be clustered de novo)
 ### gg_97_rep_set_matched.fa (gg 97_rep_set matches to our dataset - add to MASTER OTU rep. sequences)
 
-### vii.  De novo OTU picking using uclust:  cluster sequences at 97% identity (includes chimera checking with uparse)
+### vii.  De novo OTU picking using uclust:  cluster sequences at 97% identity (includes chimera checking with uparse), and omits singletons
 usearch -cluster_otus RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -minsize 2 -otus DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa -relabel OTU_dn_ -uparseout DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up
 
 ## output files:
@@ -119,43 +119,48 @@ cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_
 
 
 ### ix.  Map all sequences (pre-dereplication) back to OTU definitions using usearch_global.  Any sequences that do not hit the new OTU database are discarded.
-usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -otutabout MASTER_OTU_table.txt -biomout MASTER_OTU_bm.biom
+usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -biomout MASTER_OTU_jsn.biom
 
 ## output files:
 ### MASTER_OTU_map.uc (usearch standard results file)
-### MASTER_OTU_table.txt (standard OTU table)
-### MASTER_OTU_bm.biom (standard biom-formatted table - jason)
-#
-
-###xi Align sequences to the Silva v 123 template using QIIME 1.8.0
-module load QIIME/1.8.0
-
-align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/WorkingSpace/Silva_v123_referencefiles/silva.nr_v123.align
+### MASTER_OTU_jsn.biom (standard biom-formatted table - jason format; this will be converted to hdf5 when we move into QIIME)
 
 
-###xii.  Classified sequences using the RDP Classifier v. 2.0 with the greenegenes 97% OTU database v. 13.8; classifier re-training and assignment uses the QIIME v 1.8.0 assign_taxonomy.py workflow
-module load QIIME/1.8.0
+###xi Align sequences to the Silva v123 template using QIIME
+### Use anaconda with python2 and the QIIME 1.9.1 install
+source /mnt/research/ShadeLab/software/loadanaconda2.sh
 
-#export HPCC path to Classifier 2.2
-export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-release/rdp_classifier-2.2.jar
+#default alignment minimum is 75% of the sequence length
+align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SILVA123_QIIME_release/core_alignment/core_alignment_SILVA123.fasta -o qiime191_pynast_silva123/
 
-#use QIIME RDP Classifier to assign taxonomy with greengenes database
-assign_taxonomy.py -i MASTER_RepSeqs.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta
+#convert jsn BIOM table to hdf5
+biom convert -i MASTER_OTU_jsn.biom -o MASTER_OTU_hdf5.biom --table-type="BIOM table" --to-hdf5
 
-#add taxonomy as metadata to biom table
-echo "#OTU ID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
+#filter failed alignments from OTU table
+filter_otus_from_otu_table.py -i MASTER_OTU_hdf5.biom -o MASTER_OTU_hdf5_filteredfailedalignments.biom -e qiime191_pynast_silva123/MASTER_RepSeqs_failures.fasta
 
-cat  templine.txt rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.txt >> rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments_header.txt
+#filter failed alignments from MASTER_RepSeqs file
+filter_fasta.py -f MASTER_RepSeqs.fa -o MASTER_RepSeqs_filteredfailedalignments.fa -a qiime191_pynast_silva123/MASTER_RepSeqs_aligned.fasta
 
-biom add-metadata -i MASTER_OTU_bm.biom -o MASTER_OTU_bm_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments_header.txt
+###xii.  Classified sequences using the RDP Classifier v. 2.0 with the greenegenes 97% OTU database v. 13.8; classifier re-training and assignment uses the QIIME v 1.9.1 workflow
+#use QIIME RDP Classifier 2.2 to assign taxonomy with greengenes database
+assign_taxonomy.py -i MASTER_RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -o rdp_assigned_taxonomy22/
+
+
+#add taxonomy as metadata to hdf5 biom table
+echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
+
+cat  templine.txt rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt
+
+biom add-metadata -i MASTER_OTU_hdf5_filteredfailedalignments.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
 
 rm templine.txt
 
 ## output files
-### rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.log
-### rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignments.txt
-### rdp_assigned_taxonomy/MASTER_RepSeqs_tax_assignment)header.txt
-### MASTER_OTU_bm_rdp.biom
+### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.log
+### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt
+### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignment_header.txt
+### MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom
 
 
  _______________________________________________________________________#
