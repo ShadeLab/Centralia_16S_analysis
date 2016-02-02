@@ -1154,7 +1154,46 @@ single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -o MA
 
 * collapse table to combine all technical reps into one sample
 ```
-collapse_samples.py -b MASTER_OTU_hdf5_rdp.biom -m Centralia_Full_Map.txt --output_biom_fp MASTER_OTU_hdf5_rdp_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields GPS_pt
+collapse_samples.py -b MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -m Centralia_Full_Map.txt --output_biom_fp MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
 
 biom summarize_table -i MASTER_OTU_hdf5_rdp_collapse.biom -o MASTER_OTU_hdf5_rdp_collapse_summary.txt
+
+###
+Num samples: 19
+Num observations: 28775
+Total count: 8291763
+Table density (fraction of non-zero values): 0.257
+
+Counts/sample summary:
+ Min: 227768.0
+ Max: 571174.0
+ Median: 455244.000
+ Mean: 436408.579
+ Std. dev.: 73608.466
+ Sample Metadata Categories: collapsed_ids
+ Observation Metadata Categories: taxonomy
+
+Counts/sample detail:
+Mock: 227768.0
+C03: 321798.0
+C02: 371272.0
+C01: 383255.0
+C08: 393956.0
+C06: 399432.0
+C05: 433496.0
+C11: 448213.0
+C09: 450407.0
+C18: 455244.0
+C13: 456826.0
+C07: 460208.0
+C16: 469832.0
+C14: 474826.0
+C04: 481403.0
+C10: 486112.0
+C12: 494069.0
+C17: 512472.0
+C15: 571174.0
+###
+
+single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even227768.biom -d 227768
 ```

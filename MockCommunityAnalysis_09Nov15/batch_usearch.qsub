@@ -1,6 +1,6 @@
 #! /bin/bash --login
 # Time job will take to execute (HH:MM:SS format)
-#PBS -l walltime=06:00:00
+#PBS -l walltime=08:00:00
 # Memory needed by the job
 #PBS -l mem=264Gb
 # Number of shared memory nodes required and the number of processors per node
@@ -29,6 +29,7 @@ alias usearch='/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64'
 # File of renaming conventions:  rename.txt
 # Names of paired ends:  merge_fq_list.txt
 # craptaminant db: mock_craptaminant_OTU_db.fa
+# Mapping file: Centralia_Full_Map.txt
 
 
 ### i.  Copy needed raw fastq files
@@ -115,15 +116,17 @@ usearch -cluster_otus RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.
 ### DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up (uparse standard results table)
 
 ### viii.  Combine ref-based and de novo representative OTU sequences into one master OTU "db" file.
-cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa > MASTER_RepSeqs.fa
-
-
-### ix.  Map all sequences (pre-dereplication) back to OTU definitions using usearch_global.  Any sequences that do not hit the new OTU database are discarded.
-usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -biomout MASTER_OTU_jsn.biom
+cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa > RepSeqs.fa
 
 ## output files:
-### MASTER_OTU_map.uc (usearch standard results file)
-### MASTER_OTU_jsn.biom (standard biom-formatted table - jason format; this will be converted to hdf5 when we move into QIIME)
+### RepSeqs.fa
+
+### ix.  Map all sequences (pre-dereplication) back to OTU definitions using usearch_global.  Any sequences that do not hit the new OTU database are discarded.
+usearch -usearch_global combined_merged.fastq -db RepSeqs.fa  -strand plus -id 0.97 -uc OTU_map.uc -biomout OTU_jsn.biom
+
+## output files:
+### OTU_map.uc (usearch standard results file)
+### OTU_jsn.biom (biom-formatted table - jason format; this will be converted to hdf5 when we move into QIIME)
 
 
 ###xi Align sequences to the Silva v123 template using QIIME
@@ -131,28 +134,40 @@ usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plu
 source /mnt/research/ShadeLab/software/loadanaconda2.sh
 
 #default alignment minimum is 75% of the sequence length
-align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SILVA123_QIIME_release/core_alignment/core_alignment_SILVA123.fasta -o qiime191_pynast_silva123/
+align_seqs.py -i RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SILVA123_QIIME_release/core_alignment/core_alignment_SILVA123.fasta -o qiime191_pynast_silva123/
+
 
 #convert jsn BIOM table to hdf5
-biom convert -i MASTER_OTU_jsn.biom -o MASTER_OTU_hdf5.biom --table-type="BIOM table" --to-hdf5
+biom convert -i OTU_jsn.biom -o OTU_hdf5.biom --table-type="BIOM table" --to-hdf5
 
 #filter failed alignments from OTU table
-filter_otus_from_otu_table.py -i MASTER_OTU_hdf5.biom -o MASTER_OTU_hdf5_filteredfailedalignments.biom -e qiime191_pynast_silva123/MASTER_RepSeqs_failures.fasta
+filter_otus_from_otu_table.py -i OTU_hdf5.biom -o OTU_hdf5_filteredfailedalignments.biom -e qiime191_pynast_silva123/RepSeqs_failures.fasta
 
-#filter failed alignments from MASTER_RepSeqs file
-filter_fasta.py -f MASTER_RepSeqs.fa -o MASTER_RepSeqs_filteredfailedalignments.fa -a qiime191_pynast_silva123/MASTER_RepSeqs_aligned.fasta
+#filter failed alignments from RepSeqs file
+filter_fasta.py -f RepSeqs.fa -o MASTER_RepSeqs_filteredfailedalignments.fa -a qiime191_pynast_silva123/RepSeqs_aligned.fasta
 
-###xii.  Classified sequences using the RDP Classifier v. 2.0 with the greenegenes 97% OTU database v. 13.8; classifier re-training and assignment uses the QIIME v 1.9.1 workflow
+## output files
+### /qiime191_pynast_silva123/RepSeqs_failures.fasta
+### /qiime191_pynast_silva123/RepSeqs_aligned.fasta
+### /qiime191_pynast_silva123/RepSeqs_log.txt
+### OTU_hdf5.biom
+### OTU_hdf5_filteredfailedalignments.biom
+### MASTER_RepSeqs_filteredfailedalignments.fa
+
+###xii.  Classify sequences using the RDP Classifier v. 2.0 with the greenegenes 97% OTU database v. 13.8; classifier re-training and assignment uses the QIIME v 1.9.1 workflow
 #use QIIME RDP Classifier 2.2 to assign taxonomy with greengenes database
-assign_taxonomy.py -i MASTER_RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -o rdp_assigned_taxonomy22/
+module load RDPClassifier/2.2
 
+export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-release/rdp_classifier-2.2.jar
+
+assign_taxonomy.py -i MASTER_RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -o rdp_assigned_taxonomy22/
 
 #add taxonomy as metadata to hdf5 biom table
 echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
 
 cat  templine.txt rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt
 
-biom add-metadata -i MASTER_OTU_hdf5_filteredfailedalignments.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
+biom add-metadata -i OTU_hdf5_filteredfailedalignments.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
 
 rm templine.txt
 
@@ -162,7 +177,39 @@ rm templine.txt
 ### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignment_header.txt
 ### MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom
 
+###xii.  Subsampling and collapsing the OTU table-type using QIIME 1.9.1
+single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_even53116.biom -d 53116
 
+collapse_samples.py -b MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -m Centralia_Full_Map.txt --output_biom_fp MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
+
+#includes mock community sample
+single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even227768.biom -d 227768
+
+#discludes mock community sample
+single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -d 321798
+
+#rarefaction analysis on collapsed dataset
+alpha_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -m Centralia_Collapsed_Map.txt -a -n 25 -o alpha_rarefaction_collapsed/
+
+### MASTER_OTU_hdf5_filteredfailedalignments_rdp_even53116.biom
+### MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom
+### Centralia_Collapsed_Map.txt
+### MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even227768.biom
+### MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom
+
+###xiii.  Diversity calculations
+#make phylogenetic tree using FastTree (default) QIIME method, version
+make_phylogeny.py -i qiime191_pynast_silva123/MASTER_RepSeqs_aligned.fasta -o MASTER_RepSeqs_aligned.tre
+
+#alpha diversity analyses on even, collapsed dataset
+alpha_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -m PD_whole_tree,observed_otus -t MASTER_RepSeqs_aligned.tre -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798_alphadiv.txt
+
+#beta diversity analysis on even, collapsed dataset
+beta_diversity_through_plots.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -m Centralia_Collapsed_Map.txt -t MASTER_RepSeqs_aligned.tre -o betadiv_even321798/
+
+## output files
+### MASTER_RepSeqs_aligned.tre
+###
  _______________________________________________________________________#
 # PBS stats
 cat ${PBS_NODEFILE}
