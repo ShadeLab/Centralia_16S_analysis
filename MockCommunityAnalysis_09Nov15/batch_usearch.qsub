@@ -138,7 +138,7 @@ align_seqs.py -i RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SILVA123_Q
 
 
 #convert jsn BIOM table to hdf5
-biom convert -i OTU_jsn.biom -o OTU_hdf5.biom --table-type="BIOM table" --to-hdf5
+biom convert -i OTU_jsn.biom -o OTU_hdf5.biom --table-type="OTU table" --to-hdf5
 
 #filter failed alignments from OTU table
 filter_otus_from_otu_table.py -i OTU_hdf5.biom -o OTU_hdf5_filteredfailedalignments.biom -e qiime191_pynast_silva123/RepSeqs_failures.fasta
@@ -167,6 +167,8 @@ echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
 
 cat  templine.txt rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt
 
+source /mnt/research/ShadeLab/software/loadanaconda2.sh
+
 biom add-metadata -i OTU_hdf5_filteredfailedalignments.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
 
 rm templine.txt
@@ -183,10 +185,10 @@ single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -o MA
 collapse_samples.py -b MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -m Centralia_Full_Map.txt --output_biom_fp MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
 
 #includes mock community sample
-single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even227768.biom -d 227768
+single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even227768.biom -d 227100
 
 #discludes mock community sample
-single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -d 321798
+single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -d 321000
 
 #rarefaction analysis on collapsed dataset
 alpha_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -m Centralia_Collapsed_Map.txt -a -n 25 -o alpha_rarefaction_collapsed/

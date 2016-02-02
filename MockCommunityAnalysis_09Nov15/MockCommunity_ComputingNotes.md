@@ -1115,7 +1115,7 @@ PATH: /mnt/research/ShadeLab/SharedResources/gg_13_8_otus
 ### 01 Feb 2016
 * Working with the new uparse biom table to move into QIIME.  Must convert the jsn format to HD5, filter failed alignments from OTU table and MASTER_Rep_Seqs file to move on
 ```
-biom convert -i MASTER_OTU_bm.biom -o MASTER_OTU_hdf5.biom --table-type="BIOM table" --to-hdf5
+biom convert -i MASTER_OTU_bm.biom -o MASTER_OTU_hdf5.biom --table-type="OTU table" --to-hdf5
 ```
 * filted failed alignments from OTU table.
 ```
@@ -1140,7 +1140,7 @@ assign_taxonomy.py -i MASTER_RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -
 ```
 echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
 
-cat  templine.txt rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt
+cat  templine2.txt rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header2.txt
 
 biom add-metadata -i MASTER_OTU_hdf5_filteredfailedalignments.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
 
@@ -1156,7 +1156,7 @@ single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -o MA
 ```
 collapse_samples.py -b MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -m Centralia_Full_Map.txt --output_biom_fp MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
 
-biom summarize_table -i MASTER_OTU_hdf5_rdp_collapse.biom -o MASTER_OTU_hdf5_rdp_collapse_summary.txt
+biom summarize-table -i MASTER_OTU_hdf5_rdp_collapse.biom -o MASTER_OTU_hdf5_rdp_collapse_summary.txt
 
 ###
 Num samples: 19
@@ -1195,5 +1195,18 @@ C17: 512472.0
 C15: 571174.0
 ###
 
-single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even227768.biom -d 227768
+single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -d 321798
 ```
+### 03 Feb 2016
+* The qsub worked all the way up to the biom covert because of an option error - forgot to change the table type to OTU table; set up a script to attempt the rest of the workflow this morning
+* The RepSeqs_aligned file (silva v123 template) returned 28,940 OTUs, and the failures 1330.  This agrees with our previous alignment results using the same analysis options (29 Jan 2016)
+* Update:  the script is getting stuck (again) at the biom add-metadata command.  It returns an error about non-redundant OTUIDs, which I don't think is actually the case.  I had a similar error yesterday, but I solved it but added the options: --sc-separated taxonomy --observation-header OTUID,taxonomy.  I checked that the format of the input biom actually was hdf5 (it is):
+```
+[shadeash@dev-intel14-k20 Centralia_usearch5]$ file OTU_jsn.biom
+OTU_jsn.biom: ASCII text
+[shadeash@dev-intel14-k20 Centralia_usearch5]$ file OTU_hdf5.biom
+OTU_hdf5.biom: Hierarchical Data Format (version 5) data
+[shadeash@dev-intel14-k20 Centralia_usearch5]$
+```
+* restored the backup of the Centralia_usearch3 analysis, which worked for this adding meta-data.
+* okay, the problem seems to be something with the QIIME environment (from anaconda) being replaced with the old biom format stuff.  I wonder if this happens because of the rdp switch from 2.9  (in the .sh script) and 2.2 in the qsub?
