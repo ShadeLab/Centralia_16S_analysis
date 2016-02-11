@@ -156,9 +156,9 @@ filter_fasta.py -f RepSeqs.fa -o MASTER_RepSeqs_filteredfailedalignments.fa -a q
 
 ###xii.  Classify sequences using the RDP Classifier v. 2.0 with the greenegenes 97% OTU database v. 13.8; classifier re-training and assignment uses the QIIME v 1.9.1 workflow
 #use QIIME RDP Classifier 2.2 to assign taxonomy with greengenes database
-module load RDPClassifier/2.2
+#module load RDPClassifier/2.2
 
-export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-release/rdp_classifier-2.2.jar
+#export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-release/rdp_classifier-2.2.jar
 
 assign_taxonomy.py -i MASTER_RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -o rdp_assigned_taxonomy22/
 
@@ -167,7 +167,7 @@ echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
 
 cat  templine.txt rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt
 
-source /mnt/research/ShadeLab/software/loadanaconda2.sh
+#source /mnt/research/ShadeLab/software/loadanaconda2.sh
 
 biom add-metadata -i OTU_hdf5_filteredfailedalignments.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
 
@@ -201,13 +201,13 @@ alpha_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.bi
 
 ###xiii.  Diversity calculations
 #make phylogenetic tree using FastTree (default) QIIME method, version
-make_phylogeny.py -i qiime191_pynast_silva123/MASTER_RepSeqs_aligned.fasta -o MASTER_RepSeqs_aligned.tre
+make_phylogeny.py -i qiime191_pynast_silva123/RepSeqs_aligned.fasta -o MASTER_RepSeqs_aligned.tre
 
 #alpha diversity analyses on even, collapsed dataset
 alpha_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -m PD_whole_tree,observed_otus -t MASTER_RepSeqs_aligned.tre -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798_alphadiv.txt
 
 #beta diversity analysis on even, collapsed dataset
-beta_diversity_through_plots.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -m Centralia_Collapsed_Map.txt -t MASTER_RepSeqs_aligned.tre -o betadiv_even321798/
+beta_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -t MASTER_RepSeqs_aligned.tre -o betadiv_even321798/ -m unweighted_unifrac,weighted_unifrac,bray_curtis, binary_sorensen_dice
 
 ## output files
 ### MASTER_RepSeqs_aligned.tre
