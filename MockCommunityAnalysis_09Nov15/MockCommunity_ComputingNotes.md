@@ -1197,7 +1197,7 @@ C15: 571174.0
 
 single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -d 321798
 ```
-### 03 Feb 2016
+### 02 Feb 2016
 * The qsub worked all the way up to the biom covert because of an option error - forgot to change the table type to OTU table; set up a script to attempt the rest of the workflow this morning
 * The RepSeqs_aligned file (silva v123 template) returned 28,940 OTUs, and the failures 1330.  This agrees with our previous alignment results using the same analysis options (29 Jan 2016)
 * Update:  the script is getting stuck (again) at the biom add-metadata command.  It returns an error about non-redundant OTUIDs, which I don't think is actually the case.  I had a similar error yesterday, but I solved it but added the options: --sc-separated taxonomy --observation-header OTUID,taxonomy.  I checked that the format of the input biom actually was hdf5 (it is):
@@ -1210,3 +1210,6 @@ OTU_hdf5.biom: Hierarchical Data Format (version 5) data
 ```
 * restored the backup of the Centralia_usearch3 analysis, which worked for this adding meta-data.
 * okay, the problem seems to be something with the QIIME environment (from anaconda) being replaced with the old biom format stuff.  I wonder if this happens because of the rdp switch from 2.9  (in the .sh script) and 2.2 in the qsub?
+
+### 04 Feb 2016
+* the batch script worked up until: 1) collate_alpha.py, which is a script in the alpha_rarefaction.py workflow - this is likely a QIIME problem with the workflow (it only matters for making the rarefaction curves) and 2) the make_phylogeny - I had an error in the file pointer to the alignment file name, so that is corrected
