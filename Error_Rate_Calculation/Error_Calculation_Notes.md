@@ -1,8 +1,8 @@
 # Error Calculation for Mock Community
-### Rationale
+## Rationale
 We sequenced a mock community of Deinococcus, Burkholeria, Bacillus, Pseudomonas, Flavobacterium, and Escherichia. We did so in order to be able to tell what our error rate is and the amount of contamination that might be normal for our samples. Only the mothur pipeline has a method for calculating an error rate based on the Mock community sequencing. This becomes problematic because we do not use the mothur pipeline, but a custom UPARSE pipeline. Since how mothur and UPARSE define OTUs is fundamentally different, it is difficult to discern at what point in the UPARSE pipeline to calculate the error rate of the process. We have decided to calculate error rate in 3 ways.
 
-#### Mothur Pipeline Error Rate
+### Mothur Pipeline Error Rate
 Run the raw data through the mothur pipeline, with the exception of using the UPARSE merger instead of the mothur merger, and also not removing the lineages Archaea-Eukaryota-Mitochondria-Chloroplasts-Other. [MiSeq_SOP](http://www.mothur.org/wiki/MiSeq_SOP) ~ 4.9% error rate
 
 Mothur analysis workflow below
@@ -48,7 +48,7 @@ remove.seqs(fasta=Mock.good.unique.good.filter.unique.precluster.fasta, accnos=M
 seq.error(fasta=Mock.good.unique.good.filter.unique.precluster.fasta, reference=Mock_Com_16S_Curated.txt, aligned=F)
 ```
 R Code
-```
+```r
 setwd("/Users/JSorensen/mothur/Mock_Analysis/")
 s <- read.table(file="Mock.good.unique.good.filter.unique.precluster.pick.error.summary", header=T)
 ct <- read.table(file="Mock.good.unique.good.filter.unique.precluster.count_table", header=T)
@@ -63,8 +63,10 @@ sum(ct.good$total * s.good$mismatches)/sum(ct.good$total * s.good$total)
 ```
 
 
-#### No Crap Error Rate
+### No Crap Error Rate
  Using the UPARSE pipeline, remove any reads from the denoised set that match 100% to one of the craptaminant OTUs. Use the resulting sequences to calculate an error rate. ~1.4% error rate
+
+
 
 Mothur Code
 ```
@@ -73,7 +75,7 @@ seq.error(fasta=no_crap_Mock_formatted.unique.fa, reference=Mock_Com_16S_Curated
 ```
 
 R Code
-```
+```r
 setwd("/Users/JSorensen/mothur/")
 s <- read.table(file="no_crap_Mock_formatted.unique.ODB.error.summary", header=T)
 ct <- read.table(file="no_crap_Mock_formatted.count_table", header=T)
@@ -87,15 +89,24 @@ s.good[,1]==ct.good[,1]
 sum(ct.good$total * s.good$mismatches)/sum(ct.good$total * s.good$total)
 ```
 
-#### UPARSE mapped reads Error Rate
-Using the UPARSE pipeline, only use sequences form the denoised dataset that map to the top 6 OTUS(IE the OTUS corresponding to the Mock Community) ~.6% error rate
+### UPARSE mapped reads Error Rate
+Using the UPARSE pipeline, only use sequences form the denoised dataset that map to the to non-chimeric OTUs(IE the OTUS corresponding to the Mock Community) ~.6% error rate
+
+UPARSE Code
+```bash
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global ../../Shade_WorkingSpace/Centralia_MockCom/denoised.fq -db ../../Shade_WorkingSpace/Centralia_MockCom/mock_denoised_NoChimeraRef_otus.fa -strand plus -id 0.97 -uc map_denoised.uc -otutabout Mock_OTU_table.txt -matched Mapped_Seqs.fasta
+module load fastx
+fasta_formatter -i Mapped_Seqs.fasta -w 0 -o Mapped_Seqs_Formatted.fasta
+cut -d ";" -f 1 Mapped_Seqs_Formatted.fasta > Mapped_ShortNames.fasta
+grep ">" Mapped_ShortNames.fasta > Mapped_ShortNames.count
+```
 
 Mothur Code
 ```
 seq.error(fasta=Mapped_ShortNames_ODB.fasta, reference= Mock_Com_16S_Curated.txt, aligned=F)
 ```
 RCode
-```
+```R
 setwd("/Users/JSorensen/mothur/Mock_Analysis_UPARSEMappedReads/")
 s <- read.table(file="Mapped_ShortNames_ODB.error.summary", header=T)### read in the result file from seq.error in mothur
 ct <- read.table(file="Mapped_ShortNames.count",sep=";", header=F)### read in the fasta headers from the denoised reads from UPARSE that mapped to our OTUs
