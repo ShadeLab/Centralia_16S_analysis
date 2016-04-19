@@ -92,7 +92,7 @@ sum(ct.good$total * s.good$mismatches)/sum(ct.good$total * s.good$total)
 ```
 
 ### UPARSE mapped reads Error Rate
-Using the UPARSE pipeline, only use sequences from the **denoised dataset** that map to the to non-chimeric OTUs. Resulted in **4365 unique sequences**, representing 187,323 total reads. Led to a ~.6% error rate
+Using the UPARSE pipeline, only use sequences from the **denoised dataset** that map to the to non-chimeric OTUs. Resulted in **4365 unique sequences**, representing **187,323 total reads**. Led to a ~.6% error rate
 
 UPARSE Code
 ```bash
@@ -124,3 +124,14 @@ sum(ct.good$V2 * s.good$mismatches)/sum(ct.good$V2 * s.good$total)
 
 ### Conclusions
 Mothur pipeline provides the highest error rate of all methods (~4%). Interestingly, the "no crap" error rate was ~ 2X greater than the "mapped reads" error rate.
+
+
+### Things still to do
+
+1. Check the mothur pipeline count.seqs issue, see if it decreases our error rate in mothur.
+
+2. Re-run the "no crap" analysis but this time with the denoised dataset.
+
+3. Combine the "no crap" analysis and the "UPARSE mapped reads" analysis.
+
+4. Outline a biorxiv paper on error rate. Needs to be some discussion about an error rate due to sequencing. 
