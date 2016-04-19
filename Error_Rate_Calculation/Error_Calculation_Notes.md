@@ -127,11 +127,75 @@ Mothur pipeline provides the highest error rate of all methods (~4%). Interestin
 
 
 ### Things still to do
-
 1. Check the mothur pipeline count.seqs issue, see if it decreases our error rate in mothur.
-
 2. Re-run the "no crap" analysis but this time with the denoised dataset.
-
 3. Combine the "no crap" analysis and the "UPARSE mapped reads" analysis.
+4. Outline a biorxiv paper on error rate. Needs to be some discussion about an error rate due to sequencing.
 
-4. Outline a biorxiv paper on error rate. Needs to be some discussion about an error rate due to sequencing. 
+### No crap error rate (w/ denoised dataset)
+
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -search_exact denoised.fq -db mock_craptaminant_OTU_db.fa -notmatchedfq denoised_nocrap.fastq -strand plus -matchedfq denoised_crap.fastq
+```
+
+`denoised.fq` has 8898 sequences. After filtering there are 7,281 sequences in the file "denoised_nocrap.fastq".
+
+```
+module load fastx
+fasta_formatter -i denoised_nocrap.fastq -w 0 -o denoise_nocrap.fasta
+cut -d ";" -f 1 denoise_nocrap.fasta > denoise_nocrap_ShortNames.fasta
+grep ">" denoise_nocrap.fasta > denoise_nocrap.count
+```
+
+mothur code
+```
+seq.error(fasta=denoise_nocrap_ShortNames.fasta, reference=Mock_Com_1S_Curated.txt, aligned=F, processors=2)
+```
+
+R Code
+```
+setwd("/Users/JSorensen/mothur/Denoised_NoCrap/")
+s <- read.table(file="denoise_nocrap_ShortNames.error.summary", header=T)### read in the result file from seq.error in mothur
+ct <- read.table(file="denoise_nocrap.count",sep=";", header=F)### read in the fasta headers from the denoised reads from UPARSE that mapped to our OTUs
+rownames(s) <- s[,1]
+rownames(ct) <- ct[,1]
+no.chim <- s$numparents==1## Getting rid of any potential chimeric sequences
+s.good <- s[no.chim,]
+query <- rownames(s.good)
+ct.good <- ct[as.character(query),]
+s.good[,1]==ct.good[,1]
+sum(ct.good$V2 * s.good$mismatches)/sum(ct.good$V2 * s.good$total)
+```
+Error rate of 0.61%
+
+
+### No crap + Mapped reads error rate (w/ denoised datset)
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global denoise_nocrap.fasta -db mock_denoised_NoChimeraRef_otus.fa -strand plus -id 0.97 -uc map_denoised_nocrap.uc -otutabout Mock_OTU_table.txt -matched Denoised_nocrap_Mapped_Seqs.fasta
+module load fastx
+fasta_formatter -i Denoised_nocrap_Mapped_Seqs.fasta -w 0 -o denoised_nocrap_Mapped_Seqs1.fasta
+cut -d ";" -f 1 denoised_nocrap_Mapped_Seqs1.fasta > denoised_nocrap_Mapped_ShortNames.fasta
+grep ">" denoised_nocrap_Mapped_Seqs1.fasta > denoised_nocrap_Mapped.count
+```
+Open `denoised_nocrap_Mapped.count` in TextEdit and find and replace ">" with nothing and "size=" with nothing.
+
+Mothur
+```
+seq.error(fasta=denoised_nocrap_Mapped_ShortNames.fasta, reference=Mock_Com_16S_Curated.txt, aligned=F, processors=2)
+```
+
+R Code
+```
+setwd("/Users/JSorensen/mothur/Denoised_NoCrap_Mapped/")
+s <- read.table(file="denoised_nocrap_Mapped_ShortNames.error.summary", header=T)### read in the result file from seq.error in mothur
+ct <- read.table(file="denoised_nocrap_Mapped.count",sep=";", header=F)### read in the fasta headers from the denoised reads from UPARSE that mapped to our OTUs
+rownames(s) <- s[,1]
+rownames(ct) <- ct[,1]
+no.chim <- s$numparents==1## Getting rid of any potential chimeric sequences
+s.good <- s[no.chim,]
+query <- rownames(s.good)
+ct.good <- ct[as.character(query),]
+s.good[,1]==ct.good[,1]
+sum(ct.good$V2 * s.good$mismatches)/sum(ct.good$V2 * s.good$total)
+```
+Error rate of 0.37%.
