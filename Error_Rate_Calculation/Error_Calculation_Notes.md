@@ -3,7 +3,7 @@
 We sequenced a mock community of *Deinococcus*, *Burkholeria*, *Bacillus*, *Pseudomonas*, *Flavobacterium*, and *Escherichia*. We did so in order to be able to tell what our error rate is and the amount of contamination that might be normal for our samples. Only the mothur pipeline has a method for calculating an error rate based on the Mock community sequencing. This becomes problematic because we do not use the mothur pipeline, but a custom UPARSE pipeline. Since how mothur and UPARSE define OTUs is fundamentally different, it is difficult to discern at what point in the UPARSE pipeline to calculate the error rate of the process. We have decided to calculate error rate in 3 ways.
 
 ### Mothur Pipeline Error Rate
-Run the raw data through the mothur pipeline, with the exception of using the UPARSE merger instead of the mothur merger, and also not removing the lineages Archaea-Eukaryota-Mitochondria-Chloroplasts-Other. [MiSeq_SOP](http://www.mothur.org/wiki/MiSeq_SOP) ~ 4.1% error rate
+Run the raw data through the mothur pipeline, with the exception of using the UPARSE merger instead of the mothur merger, and also not removing the lineages Archaea-Eukaryota-Mitochondria-Chloroplasts-Other. [MiSeq_SOP](http://www.mothur.org/wiki/MiSeq_SOP) ~ 4.1% error rate.
 
 Mothur analysis workflow below
 ```
@@ -47,6 +47,8 @@ chimera.uchime(fasta=current, count=Mock.good.unique.good.filter.unique.preclust
 remove.seqs(fasta=Mock.good.unique.good.filter.unique.precluster.fasta, accnos=Mock.good.unique.good.filter.unique.precluster.denovo.uchime.accnos)
 seq.error(fasta=Mock.good.unique.good.filter.unique.precluster.fasta, reference=Mock_Com_16S_Curated.txt, aligned=F)
 ```
+This process results in 70,694 sequences being used for calculating the error rate. *(I think there may be an issue here..., I may have used the count.seqs function improperly, which may have lowered the totaly number of sequences used to calculate error.)*
+
 R Code
 ```r
 setwd("/Users/JSorensen/mothur/Mock_Analysis/")
