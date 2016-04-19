@@ -166,7 +166,7 @@ ct.good <- ct[as.character(query),]
 s.good[,1]==ct.good[,1]
 sum(ct.good$V2 * s.good$mismatches)/sum(ct.good$V2 * s.good$total)
 ```
-Error rate of 0.61%
+**Error rate of 0.61%**
 
 
 ### No crap + Mapped reads error rate (w/ denoised datset)
@@ -198,4 +198,4 @@ ct.good <- ct[as.character(query),]
 s.good[,1]==ct.good[,1]
 sum(ct.good$V2 * s.good$mismatches)/sum(ct.good$V2 * s.good$total)
 ```
-Error rate of 0.37%.
+**Error rate of 0.37%.**
