@@ -1,6 +1,6 @@
 # Error Calculation for Mock Community
 ## Rationale
-We sequenced a mock community of Deinococcus, Burkholeria, Bacillus, Pseudomonas, Flavobacterium, and Escherichia. We did so in order to be able to tell what our error rate is and the amount of contamination that might be normal for our samples. Only the mothur pipeline has a method for calculating an error rate based on the Mock community sequencing. This becomes problematic because we do not use the mothur pipeline, but a custom UPARSE pipeline. Since how mothur and UPARSE define OTUs is fundamentally different, it is difficult to discern at what point in the UPARSE pipeline to calculate the error rate of the process. We have decided to calculate error rate in 3 ways.
+We sequenced a mock community of *Deinococcus*, *Burkholeria*, *Bacillus*, *Pseudomonas*, *Flavobacterium*, and *Escherichia*. We did so in order to be able to tell what our error rate is and the amount of contamination that might be normal for our samples. Only the mothur pipeline has a method for calculating an error rate based on the Mock community sequencing. This becomes problematic because we do not use the mothur pipeline, but a custom UPARSE pipeline. Since how mothur and UPARSE define OTUs is fundamentally different, it is difficult to discern at what point in the UPARSE pipeline to calculate the error rate of the process. We have decided to calculate error rate in 3 ways.
 
 ### Mothur Pipeline Error Rate
 Run the raw data through the mothur pipeline, with the exception of using the UPARSE merger instead of the mothur merger, and also not removing the lineages Archaea-Eukaryota-Mitochondria-Chloroplasts-Other. [MiSeq_SOP](http://www.mothur.org/wiki/MiSeq_SOP) ~ 4.9% error rate
@@ -64,7 +64,7 @@ sum(ct.good$total * s.good$mismatches)/sum(ct.good$total * s.good$total)
 
 
 ### No Crap Error Rate
- Using the UPARSE pipeline, remove any reads from the denoised set that match 100% to one of the craptaminant OTUs. Use the resulting sequences to calculate an error rate. ~1.4% error rate
+ Using the UPARSE pipeline, remove any reads from the **merged set** that match 100% to one of the craptaminant OTUs. Resulted in file containing **253257 reads**. Use the resulting sequences to calculate an error rate. ~1.4% error rate.
 
 
 
@@ -90,7 +90,7 @@ sum(ct.good$total * s.good$mismatches)/sum(ct.good$total * s.good$total)
 ```
 
 ### UPARSE mapped reads Error Rate
-Using the UPARSE pipeline, only use sequences form the denoised dataset that map to the to non-chimeric OTUs(IE the OTUS corresponding to the Mock Community) ~.6% error rate
+Using the UPARSE pipeline, only use sequences from the **denoised dataset** that map to the to non-chimeric OTUs. Resulted in **4365 unique sequences**, representing 187,323 total reads. Led to a ~.6% error rate
 
 UPARSE Code
 ```bash
@@ -119,3 +119,6 @@ ct.good <- ct[as.character(query),]
 s.good[,1]==ct.good[,1]
 sum(ct.good$V2 * s.good$mismatches)/sum(ct.good$V2 * s.good$total)
 ```
+
+### Conclusions
+Mothur pipeline provides the highest error rate of all methods (~4%). Interestingly, the "no crap" error rate was ~ 2X greater than the "mapped reads" error rate.
