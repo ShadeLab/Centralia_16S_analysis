@@ -153,7 +153,7 @@ seq.error(fasta=denoise_nocrap_ShortNames.fasta, reference=Mock_Com_1S_Curated.t
 ```
 
 R Code
-```
+```R
 setwd("/Users/JSorensen/mothur/Denoised_NoCrap/")
 s <- read.table(file="denoise_nocrap_ShortNames.error.summary", header=T)### read in the result file from seq.error in mothur
 ct <- read.table(file="denoise_nocrap.count",sep=";", header=F)### read in the fasta headers from the denoised reads from UPARSE that mapped to our OTUs
@@ -170,7 +170,7 @@ sum(ct.good$V2 * s.good$mismatches)/sum(ct.good$V2 * s.good$total)
 
 
 ### No crap + Mapped reads error rate (w/ denoised datset)
-```
+```bash
 /mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global denoise_nocrap.fasta -db mock_denoised_NoChimeraRef_otus.fa -strand plus -id 0.97 -uc map_denoised_nocrap.uc -otutabout Mock_OTU_table.txt -matched Denoised_nocrap_Mapped_Seqs.fasta
 module load fastx
 fasta_formatter -i Denoised_nocrap_Mapped_Seqs.fasta -w 0 -o denoised_nocrap_Mapped_Seqs1.fasta
@@ -199,3 +199,17 @@ s.good[,1]==ct.good[,1]
 sum(ct.good$V2 * s.good$mismatches)/sum(ct.good$V2 * s.good$total)
 ```
 **Error rate of 0.37%.**
+
+
+### May 12th, 2016
+Came across a protocol for calculating error rate on Robert Edgar's website. It is sort of [hidden](http://drive5.com/usearch/manual/upp_tut_misop_qual.html). He recommends chimera filtering the reads before calculating error. Important to note that you chimera filter the merged reads and use these chimera filtered merged reads to calculate error (ie before denoising of the reads). 
+
+#### Chimera filtering merged reads
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -uchime_ref Mock.fastq -db Mock_Com_16S_Curated.txt -nonchimerasq Mock_nonchimeric.fastq -strand plus
+```
+#### Calculating Error Rate
+```
+/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global Mock_nonchimeric.fastq -db Mock_Com_16S_Curated.txt -strand plus -qout Error_rate_Mock.txt -log Error_rate_Mock.log -id 0.9
+```
+Using this method , we get an error rate of 0.469%.
