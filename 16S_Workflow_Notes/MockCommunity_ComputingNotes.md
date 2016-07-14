@@ -520,6 +520,7 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o mock_denoised_classifi
     - how to extend usearch to be open reference
     - using the RDP classifier instead of uclust
     - combining the chimera checking with denoising step - could this be done by using the `-cluster_otus` command instead of the `-cluster_fast` one?
+
 ```
 [shadeash@dev-intel10 Shade_MockCom]$ usearch -cluster_otus uniques_Mock_nosigs.fastq -centroids_fastq denoised_chimera.fq -id 0.9 -maxdiffs 5 -abskew 10 -sizein -sizeout -sort size -otus mock_denoised_chim_otus.fa -relabel OTU_ -uparseout results_chim.txt
 usearch v8.1.1803_i86linux32, 4.0Gb RAM (24.6Gb total), 8 cores
@@ -554,6 +555,7 @@ WARNING: Option -abskew ignored
 * merge_fq_list.txt includes only Centralia fastq names, plus the mock community, totaling 55 file names.  18 samples x 3 reps each = 54, plus mock = 55.
 * Making copies of fastq files for merging
 * rsync (example)[http://unix.stackexchange.com/questions/41693/how-to-copy-some-but-not-all-files] to exclude extra sequencing files (from Matt Schrenk's group)
+
 ```
 pwd
 >/mnt/research/ShadeLab/WorkingSpace/Shade_MockCom/Merging
@@ -829,6 +831,7 @@ grep -c @ RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq
 ```
 
 * based on output file, the following options are void with usearch_global:
+
 ```
 WARNING: Option -centroids ignored
 
@@ -864,9 +867,12 @@ wc -l RefMatchOTus_nocrap_denoised_nosigs_uniques_combined_merged.txt
 
 ```
 /mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -cluster_otus RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -minsize 2 -otus DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa -relabel OTU_dn_ -sizeout -uparseout DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up
+
 ```
+
 * there were 195,358 chimeras detected
 * realized I should have output the .fa instead of the fastq file for the uclust_global against the gg db. back to usearch_global
+
 ```
 /mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -matched RefMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa -otutabout RefMatchOTUTab_nocrap_denoised_nosigs_uniques_combined_merged.txt
 
@@ -879,6 +885,7 @@ cat eNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa
 ```
 /mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64 -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -otutabout MASTER_OTU_table.txt
 ```
+
 * the job took 1.5 hrs to run (walltime)
 * seems that the OTU table contains 64,667 OTUs.  This is still relatively high, but much fewer than the previous ~300,000 we were getting before the quality filtering.  This also ~10K fewer than the 75,071 - where did those OTUs go?  
 * notes from this usearch manual [page](http://www.drive5.com/usearch/manual/termination_options.html).  the usearch_global (used for reference db matching and, ultimately, for mapping reads) default options for maxaccepts and maxrejects is 1 and 32, respectively, and for cluster_fast (used for "denoising") it is 1 and 8.
@@ -899,6 +906,7 @@ alias usearch='/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64'
 ### 02 Dec 2015
 * Re-ran the OTU mapping with the gg/de_novo database
 *  Results:  30K sequences - this makes quite a bigger difference in reducing the OTUs because it uses longer sequences from the gg db as the reference rather than the dataset (duh) which is more appropriate/ correct.  We have ~30K OTUs, which is more in line with what we should expect from the literature
+
 ```
 [shadeash@dev-intel14 Merging]$ wc -l MASTER_OTU_table.txt
 29958 MASTER_OTU_table.txt
@@ -906,6 +914,7 @@ alias usearch='/mnt/research/rdp/public/thirdParty/usearch8.1.1831_i86linux64'
 grep -c "^>" MASTER_RepSeqs.fa
 30067
 ```
+
 * Now, it is time to start with a clean slate, re-run the analysis, and reproduce the results, starting from the work with the full dataset.
 
 ### 03 Dec 2015
@@ -940,6 +949,7 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.8 -o MASTER_OTU_classified.
 
 * maybe we can re-train classifier independently?
 * this is a multi-step process, tutorial is not straightforward...QIIME already has a built-in workflow for classifier re-training, and maybe we can move into qiime and use that instead of piece-meal re-training the Classifier
+
 ```
 module load RDPClassifier/2.9
 
@@ -953,6 +963,7 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.8 -o MASTER_OTU_classified.
 * --reference_seqs_fp is designated by -r
 * export 2.2 (older version, default with QIIME) OR 2.9 - try to use 2.9
 * this works!
+
 ```
 module load QIIME/1.8.0
 
@@ -966,6 +977,7 @@ export RDP_JAR_PATH=/opt/software/RDPClassifier/2.9/dist/rdp_classifier-2.9.jar
 #use QIIME to assign taxonomy
 assign_taxonomy.py -i MASTER_RepSeqs.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta
 ```
+
 * Add QIIME header to taxonomy file and append the taxonomy metadata to .biom file
 
 ```
@@ -1091,6 +1103,7 @@ align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SIL
 
 ### 29 Jan 2016
 * The alignment against the Silva v123 template is equivalent for QIIME 1.8.0 and 1.9.1 - not surprising because the pynast algorithm is the same.  The good news is that the new QIIME 1.9.1 ShadeLAb install with anaconda is working!
+
 |QIIME v    | 1.8.0 HPCC install  | 1.9.1 Anaconda install   |
 | :------------- | :-------------: |-------------: |
 | template      | silva 123      |silva 123      |
@@ -1100,6 +1113,7 @@ align_seqs.py -i MASTER_RepSeqs.fa -t /mnt/research/ShadeLab/SharedResources/SIL
 | de novo failed      | 1325      |1325      |
 
 * We have 6 gg OTUs that fail to align to the silva v123 template - these should be noted in the manuscript.  They are:
+
 | GG OTU ID     |
 | :-------------: |
 | 1837676       |
@@ -1114,17 +1128,23 @@ PATH: /mnt/research/ShadeLab/SharedResources/gg_13_8_otus
 
 ### 01 Feb 2016
 * Working with the new uparse biom table to move into QIIME.  Must convert the jsn format to HD5, filter failed alignments from OTU table and MASTER_Rep_Seqs file to move on
+
 ```
 biom convert -i MASTER_OTU_bm.biom -o MASTER_OTU_hdf5.biom --table-type="OTU table" --to-hdf5
 ```
-* filted failed alignments from OTU table.
+
+* filtered failed alignments from OTU table.
+
 ```
 filter_otus_from_otu_table.py -i MASTER_OTU_hdf5.biom -o MASTER_OTU_hdf5_filteredfailedalignments.biom -e qiime191_pynast_silva123/MASTER_RepSeqs_failures.fasta
 ```
+
 * filtering the failed-to-align sequences reduced the total sequence count from 8,326,877 to 8,291,763.  Removed ~30K sequences.
+
 ```
 filter_fasta.py -f MASTER_RepSeqs.fa -o MASTER_RepSeqs_filteredfailedalignments.fa -a qiime191_pynast_silva123/MASTER_RepSeqs_aligned.fasta
 ```
+
 * filtering the failed-to-align sequences reduced the rep sequence count (no. OTUs) from 30218 to 28887 rep. seqs.
 * now, try again to assign taxonomy using RDP but within the QIIME 1.9.1 environment.  We need to export the path to RDP classifier 2.2 (2.9 is still not working, but the changes are mostly in the database, so it should be okay to use the 2.2 algorithm with the greengenes database)
 
@@ -1137,6 +1157,7 @@ assign_taxonomy.py -i MASTER_RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -
 ```
 
 * add taxonomy assignments to biom table; note that there as was a bug in the biom add-metadata command that requires additional options (--sc-separated taxonomy and --obervation-header OTUID, taxonomy); this, incombo with the jasn-to-hdf5 convserion, was the cause of our previous formatting problems.
+
 ```
 echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
 
@@ -1147,12 +1168,14 @@ biom add-metadata -i MASTER_OTU_hdf5_filteredfailedalignments.biom -o MASTER_OTU
 ```
 
 * summarize the full biom table (to assess variability in technical replicates)
+
 ```
 # subsample to even (53116.0 minimum observed sequences in sample C03D02)
 single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_even53116.biom -d 53116
 ```
 
 * collapse table to combine all technical reps into one sample
+
 ```
 collapse_samples.py -b MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -m Centralia_Full_Map.txt --output_biom_fp MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
 
@@ -1201,6 +1224,7 @@ single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.b
 * The qsub worked all the way up to the biom covert because of an option error - forgot to change the table type to OTU table; set up a script to attempt the rest of the workflow this morning
 * The RepSeqs_aligned file (silva v123 template) returned 28,940 OTUs, and the failures 1330.  This agrees with our previous alignment results using the same analysis options (29 Jan 2016)
 * Update:  the script is getting stuck (again) at the biom add-metadata command.  It returns an error about non-redundant OTUIDs, which I don't think is actually the case.  I had a similar error yesterday, but I solved it but added the options: --sc-separated taxonomy --observation-header OTUID,taxonomy.  I checked that the format of the input biom actually was hdf5 (it is):
+
 ```
 [shadeash@dev-intel14-k20 Centralia_usearch5]$ file OTU_jsn.biom
 OTU_jsn.biom: ASCII text
@@ -1208,8 +1232,43 @@ OTU_jsn.biom: ASCII text
 OTU_hdf5.biom: Hierarchical Data Format (version 5) data
 [shadeash@dev-intel14-k20 Centralia_usearch5]$
 ```
+
 * restored the backup of the Centralia_usearch3 analysis, which worked for this adding meta-data.
 * okay, the problem seems to be something with the QIIME environment (from anaconda) being replaced with the old biom format stuff.  I wonder if this happens because of the rdp switch from 2.9  (in the .sh script) and 2.2 in the qsub?
 
 ### 04 Feb 2016
 * the batch script worked up until: 1) collate_alpha.py, which is a script in the alpha_rarefaction.py workflow - this is likely a QIIME problem with the workflow (it only matters for making the rarefaction curves) and 2) the make_phylogeny - I had an error in the file pointer to the alignment file name, so that is corrected
+
+### 23 Feb 2016
+* Everything seems to be running well with the batch script, now that updated rdp to v2.2 that is default with QIIME instead of trying to use the most recent version.  The alpha_rarefaction.py workflow fails before plotting.
+
+### 25 Feb 2016
+* error in PATH for gg reference database for comparison without craptaminant removal - fixed and started a new job
+* SH found an error in the order of operations of making the phylogenetic tree, which was causing the alpha rarefaction script to fail.  The error message was not that the tree was missing, so this was not intuitive.  However, moving the make_phylogeny.py script to run in advance of the alpha_rarefaction.py script now causes no errors.
+* beta_diversity.py script was failing because there was an extra space in the comma-separated metrics (after -m option)
+
+### 01 Mar 2016
+* Started job to finish alpha_rarefaction.py for rarefaction on the collapsed, even dataset.
+* Started new job in the dataset w/ craptaminants to finish up the diversity analyses (tree building, alpha, and beta diversity calculations) to compare with crap-filtered dataset
+* Comparing crap-included to crap-filtered: first glance - the difference in total no. OTUs/sequences seem negligible compared to the size of the dataset; hopefully these will also be in low abundance in the larger dataset
+* the craptaminant db has 1617 sequences in it.
+
+| file/comparsions | crap-included | crap-filtered (includes filtering sequences that hit 100% to mock community craptaminant db)     |difference|
+|:-------------  | :-------------: | :-------------: |-------------:|
+|RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq (seqs to-be de novo clustered) | 258339 seqs       | 257512 seqs      |827 seqs|
+|gg_97_rep_set_matched.fa (ref-matched OTUs)  | 9208 rep seqs. | 9170 rep seqs.|38 rep seqs.|
+|DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa (de novo OTUs) |21040 rep seqs. | 21032 rep seqs. |8 rep seqs.|
+|OTU_jsn.biom (OTU table) | 30136 OTUs| 30090 OTUs  |46 OTUs|
+| MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom (rarefied OTU table) | 28355 OTUs| 28379 OTUs  | 24 OTUs|
+|rarefied alpha diversity:  mean richness | 7226.833333 | 7214.611111 |12|
+|rarefied alpha diversity:  mean PD_whole_tree | 344.6084756 |345.8420578|1 |
+|No. craptaminent OTUs in rarefied dataset| :-------------: | :-------------: |-------------:|
+|Sum of craptaminent OTU relative abundances | :-------------: | :-------------: |-------------:|
+
+### 11 July 2016
+* Found some contaminant chloroplast sequences; will have to rebuild OTU table at QIIME step
+filter_taxa_from_otu_table.py -i otu_table.biom -o otu_table_non_bac_firm.biom -n p__Bacteroidetes,p__Firmicutes
+```
+filter_taxa_from_otu_table.py -i otu_table.biom -o otu_table_non_bac_firm.biom -n  c__Streptophyta, c__Chlorophyta
+```
+This step should go before the collapsing and rarefaction, but after assigning taxonomy.

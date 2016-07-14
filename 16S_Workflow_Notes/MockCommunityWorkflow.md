@@ -19,8 +19,6 @@ http://drive5.com/usearch
 #output files: Mock.fastq
 ```
 
-### FOR REAL DATA-  POOL SAMPLES FROM DATASET AT THIS STEP
-
 ### Deplication with UNOISE
 ```
 usearch -derep_fulllength Mock.fastq -fastqout uniques_Mock.fastq -sizeout
@@ -117,7 +115,7 @@ usearch -sortbysize uniques_combined_merged.fastq -fastqout nosigs_uniques_combi
 ## output file: nosigs_uniques_combined_merged.fastq
 ```
 
-### v. Precluster (denoise) - for our dataset on the 64-bit usearch, this takes ~1 hour to run.
+### v. Precluster (denoise) - for our dataset on the 64-bit usearch
 
 ```
 usearch -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq denoised_nosigs_uniques_combined_merged.fastq -id 0.9 -maxdiffs 5 -abskew 10 -sizein -sizeout -sort size

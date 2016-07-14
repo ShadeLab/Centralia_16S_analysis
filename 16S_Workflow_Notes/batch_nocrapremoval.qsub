@@ -1,6 +1,6 @@
 #! /bin/bash --login
 # Time job will take to execute (HH:MM:SS format)
-#PBS -l walltime=08:00:00
+#PBS -l walltime=18:00:00
 # Memory needed by the job
 #PBS -l mem=264Gb
 # Number of shared memory nodes required and the number of processors per node
@@ -91,17 +91,17 @@ usearch -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq deno
 ### denoised_nosigs_uniques_combined_merged.fastq
 
 ### vi.  Remove sequences that match 100% to our craptaminant database
-usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -matchedfq craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq
+#usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -matchedfq craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq
 
 ## output files:
 ### craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa;
 ### nocrap_denoised_nosigs_uniques_combined_merged.fastq
 
 ### vi.  Reference-based OTU picking using usearch_global: Cluster sequences at 97% identity to the greengenes database, version 13.8
-usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
+#usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
 
 #if part vi (craptaminant removal) is skipped, use line below
-#usearch -usearch_global denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db /mnt/research/ShadeLab/WorkingSpace/gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
+usearch -usearch_global denoised_nosigs_uniques_combined_merged.fastq -id 0.97 -db /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -notmatchedfq RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus -uc RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc -dbmatched gg_97_rep_set_matched.fa
 
 ## output files:
 ### RefMatchOTUMap_nocrap_denoised_nosigs_uniques_combined_merged.uc (usearch standard results table);
@@ -179,7 +179,11 @@ rm templine.txt
 ### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignment_header.txt
 ### MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom
 
-###xii.  Subsampling and collapsing the OTU table-type using QIIME 1.9.1
+###xii.  Make phylogeny
+#make phylogenetic tree using FastTree (default) QIIME method, version
+make_phylogeny.py -i qiime191_pynast_silva123/RepSeqs_aligned.fasta -o MASTER_RepSeqs_aligned.tre
+
+###xiii.  Subsampling and collapsing the OTU table-type using QIIME 1.9.1
 single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_even53116.biom -d 53116
 
 collapse_samples.py -b MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -m Centralia_Full_Map.txt --output_biom_fp MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
@@ -199,7 +203,7 @@ alpha_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.bi
 ### MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even227768.biom
 ### MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom
 
-###xiii.  Diversity calculations
+###xiv.  Diversity calculations
 #make phylogenetic tree using FastTree (default) QIIME method, version
 make_phylogeny.py -i qiime191_pynast_silva123/RepSeqs_aligned.fasta -o MASTER_RepSeqs_aligned.tre
 
@@ -207,7 +211,7 @@ make_phylogeny.py -i qiime191_pynast_silva123/RepSeqs_aligned.fasta -o MASTER_Re
 alpha_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -m PD_whole_tree,observed_otus -t MASTER_RepSeqs_aligned.tre -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798_alphadiv.txt
 
 #beta diversity analysis on even, collapsed dataset
-beta_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -t MASTER_RepSeqs_aligned.tre -o betadiv_even321798/ -m unweighted_unifrac,weighted_unifrac,bray_curtis, binary_sorensen_dice
+beta_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -t MASTER_RepSeqs_aligned.tre -o betadiv_even321798/ -m unweighted_unifrac,weighted_unifrac,bray_curtis,binary_sorensen_dice
 
 ## output files
 ### MASTER_RepSeqs_aligned.tre
