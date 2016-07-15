@@ -174,55 +174,84 @@ biom add-metadata -i OTU_hdf5_filteredfailedalignments.biom -o OTU_hdf5_filtered
 rm templine.txt
 
 ## output files
-### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.log
-### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt
-### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignment_header.txt
-### MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom
+### rdp_assigned_taxonomy/RepSeqs_filteredfailedalignments_tax_assignments.log
+### rdp_assigned_taxonomy/RepSeqs_filteredfailedalignments_tax_assignments.txt
+### rdp_assigned_taxonomy/RepSeqs_filteredfailedalignments_tax_assignment_header.txt
+### OTU_hdf5_filteredfailedalignments_rdp.biom
 
-###xii.  Make phylogeny
-#make phylogenetic tree using FastTree (default) QIIME method, version
-make_phylogeny.py -i qiime191_pynast_silva123/RepSeqs_aligned.fasta -o MASTER_RepSeqs_aligned.tre
+### xii.  Filter chloroplast and mitochondria from OTU table and RepSeqs file
+#remove chloroplasts and mitochondria (keep cyanobacteria that are not chloroplasts)
+filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -n  c__Streptophyta,c__Chlorophyta,f_mitochondria
 
-###xiii.  Subsampling and collapsing the OTU table-type using QIIME 1.9.1
-single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_even53116.biom -d 53116
-
-collapse_samples.py -b MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom -m Centralia_Full_Map.txt --output_biom_fp MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
-
-#includes mock community sample
-single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even227768.biom -d 227100
-
-#discludes mock community sample
-single_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -d 321000
-
-#rarefaction analysis on collapsed dataset
-alpha_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom -m Centralia_Collapsed_Map.txt -a -n 25 -o alpha_rarefaction_collapsed/ -t MASTER_RepSeqs_aligned.tre
+#remove same Mito and Chloro sequences from RepSeqs file
+filter_fasta.py -f RepSeqs_filteredfailedalignments.fa -o MASTER_RepSeqs_filteredfailedalignments_filteredCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
 
 ## output files
-### MASTER_OTU_hdf5_filteredfailedalignments_rdp_even53116.biom
-### MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse.biom
-### Centralia_Collapsed_Map.txt
-### MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even227768.biom
-### MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom
-### MASTER_RepSeqs_aligned.tre
+### MASTER_RepSeqs_filteredfailedalignments_filteredCM.fa
+### OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
+
+
+###xiii.  Make phylogeny
+#clean alignment by omitting highly variable regions before tree building - will make tree building more efficient
+filter_alignment.py -i qiime191_pynast_silva123/RepSeqs_aligned.fasta -o clean_alignment/
+
+#make phylogenetic tree using FastTree (default) QIIME method, version
+make_phylogeny.py -i clean_alignment/RepSeqs_aligned_pfiltered.fasta -o MASTER_RepSeqs_aligned_clean.tre -r tree_method_default
+
+### clean_alignment/RepSeqs_aligned_pfiltered.fasta
+### MASTER_RepSeqs_aligned_clean.tre
+
+###xiii.  Subsampling and collapsing the OTU table-type using QIIME 1.9.1
+single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM_even53000.biom -d 53000
+
+collapse_samples.py -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -m Centralia_Full_Map.txt --output_biom_fp OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
+
+#subsample to include mock community
+single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -d 321000
+
+#subsample to omit mock community
+single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom -o OTU_hdf5_filteredfailedalignments_rdp_collapse_even321000.biom -d 321000
+
+#rarefaction analysis on collapsed dataset
+alpha_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -m Centralia_Collapsed_Map.txt -a -n 15 -o alpha_rarefaction_collapsed/ -t MASTER_RepSeqs_aligned_clean.tre
+
+### output files
+## OTU_hdf5_filteredfailedalignments_rdp_rmCM_even53000.biom
+## OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom
+## OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even227100.biom
+## MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom
+## alpha_rarefaction_collapsed/
 
 ###xiv.  Diversity calculations
 #alpha diversity analyses on even, collapsed dataset
-alpha_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -m PD_whole_tree,observed_otus -t MASTER_RepSeqs_aligned.tre -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798_alphadiv.txt
+alpha_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -m PD_whole_tree,observed_otus -t MASTER_RepSeqs_aligned_clean.tre -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000_alphadiv.txt
 
 #beta diversity analysis on even, collapsed dataset
-beta_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -t MASTER_RepSeqs_aligned.tre -o betadiv_even321798/ -m unweighted_unifrac,weighted_unifrac,bray_curtis,binary_sorensen_dice
+beta_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -t MASTER_RepSeqs_aligned_clean.tre -o betadiv_even321000/ -m unweighted_unifrac,weighted_unifrac
 
-#PCoA output
-principal_coordinates.py -i betadiv_even321798/ -o beta_div_pcoa_results/
 ## output files
-###
-###
+### betadiv_even321000/
+### MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000_alphadiv.txt
 
 ###Summarize at phylum level
-summarize_taxa.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -L 2 -o phylum_summary/
+summarize_taxa.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -L 2 -o phylum_summary/
 
 #convert to classic OTU table for use in R
-biom convert -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_collapse_even321798.txt --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+biom convert -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.txt --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+
+## output files
+### MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom
+### phylum_summary/MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000_L2.biom
+### phylum_summary/MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000_L2.txt
+### betadiv_even321000/unweighted_unifrac_MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.txt
+### betadiv_even321000/weighted_unifrac_MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.txt
+
+###Move files to local computer for analysis in R:
+### OTU table: MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.txt
+### phylum summary: phylum_summary/MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000_L2.txt
+### alpha diversity: MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000_alphadiv.txt
+### betadiv_even321000/weighted_unifrac_MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.txt
+
  _______________________________________________________________________#
 # PBS stats
 cat ${PBS_NODEFILE}

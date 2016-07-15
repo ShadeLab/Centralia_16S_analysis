@@ -194,7 +194,7 @@ align_seqs.py -i RepSeqs.fa -t core_alignment_SILVA123.fasta -o qiime191_pynast_
 ### /qiime191_pynast_silva123/RepSeqs_log.txt
 ```
 
-### iii. Filter failed alignments
+### iii. Filter failed alignments from OTU table
 ```
 #from OTU table
 filter_otus_from_otu_table.py -i OTU_hdf5.biom -o OTU_hdf5_filteredfailedalignments.biom -e qiime191_pynast_silva123/RepSeqs_failures.fasta
@@ -216,11 +216,11 @@ assign_taxonomy.py -i RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -t gg_13
 
 echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
 
-cat  templine.txt rdp_assigned_taxonomy22/RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt
+cat  templine.txt rdp_assigned_taxonomy22/RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/RepSeqs_filteredfailedalignments_tax_assignments_header.txt
 
 #source /mnt/research/ShadeLab/software/loadanaconda2.sh
 
-biom add-metadata -i OTU_hdf5_filteredfailedalignments.biom -o OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
+biom add-metadata -i OTU_hdf5_filteredfailedalignments.biom -o OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
 
 rm templine.txt
 
@@ -230,15 +230,81 @@ rm templine.txt
 ### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignment_header.txt
 ### OTU_hdf5_filteredfailedalignments_rdp.biom
 ```
-vi.  Filter chloroplast and mitochondria from OTU table and RepSeqs
+
+### vi.  Filter chloroplast and mitochondria from OTU table and RepSeqs file
 ```
 #remove chloroplasts and mitochondria (keep cyanobacteria that are not chloroplasts)
-filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -n  c__Streptophyta, c__Chlorophyta, f_mitochondria
+filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -n  c__Streptophyta,c__Chlorophyta,f_mitochondria
 
-#output otu table of just those groups to later remove/reference to alignment
-filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o ChloroMito.biom -p  c__Streptophyta, c__Chlorophyta, f_mitochondria
+#remove same Mito and Chloro sequences from RepSeqs file
+filter_fasta.py -f RepSeqs_filteredfailedalignments.fa -o MASTER_RepSeqs_filteredfailedalignments_filteredCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
 
-#remove same sequences from RepSeqs file
-filter_fasta.py -i RepSeqs_filteredfailedalignments.fa -o RepSeqs_filteredfailedalignments_filteredCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
+#optional: summarize biom table
+#biom summarize-table -i OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
 
+## output files
+### MASTER_RepSeqs_filteredfailedalignments_filteredCM.fa
+### OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
 ```
+
+### vii.  Make phylogeny using FastTree (version)
+```
+#First, clean alignment by omitting highly variable regions before tree building - will make tree building more efficient
+filter_alignment.py -i qiime191_pynast_silva123/RepSeqs_aligned.fasta -o clean_alignment/
+
+#make phylogeny and root tree
+make_phylogeny.py -i clean_alignment/RepSeqs_aligned_pfiltered.fasta -o MASTER_RepSeqs_aligned_clean.tre -r tree_method_default
+
+## output files
+### clean_alignment/RepSeqs_aligned_pfiltered.fasta
+### MASTER_RepSeqs_aligned_clean.tre
+```
+
+### viii. Subsampling, collapsing the OTU table, exploratory rarefaction
+```
+#subsampling for analysis of technical variability in DNA extraction replicates
+single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM_even53000.biom -d 53000
+
+#collapse table across technical (DNA extraction) replicates
+collapse_samples.py -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -m Centralia_Full_Map.txt --output_biom_fp OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
+
+#optional summary
+biom summarize-table -i OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom
+
+#subsample to include mock community
+single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even227100.biom -d 227100
+
+#subsample to omit mock community
+single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -d 321000
+
+#Exploratory rarefaction to determine sampling efforts
+alpha_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -m Centralia_Collapsed_Map.txt -a -n 15 -o alpha_rarefaction_collapsed/ -t MASTER_RepSeqs_aligned_clean.tre
+
+### output files
+## OTU_hdf5_filteredfailedalignments_rdp_rmCM_even53000.biom
+## OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom
+## OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even227100.biom
+## MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom
+## alpha_rarefaction_collapsed/
+```
+
+### xiv.  Diversity calculations
+#alpha diversity analyses on even, collapsed dataset
+alpha_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -m PD_whole_tree,observed_otus -t MASTER_RepSeqs_aligned_clean.tre -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000_alphadiv.txt
+
+#beta diversity analysis on even, collapsed dataset
+beta_diversity.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -t MASTER_RepSeqs_aligned_clean.tre -o betadiv_even321000/ -m unweighted_unifrac,weighted_unifrac
+
+#summarize at phylum level
+summarize_taxa.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -L 2 -o phylum_summary/
+
+### xv.  Convert biom for export
+```
+biom convert -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.txt --to-tsv --header-key taxonomy --output-metadata-id "ConsensusLineage"
+```
+
+### Move files to local computer for analysis in R:
+### OTU table: MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.txt
+### phylum summary: phylum_summary/MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000_L2.txt
+### alpha diversity: MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000_alphadiv.txt
+### betadiv_even321000/weighted_unifrac_MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.txt

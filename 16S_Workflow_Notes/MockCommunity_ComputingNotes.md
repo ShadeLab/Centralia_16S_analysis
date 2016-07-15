@@ -1283,3 +1283,5 @@ filter_fasta.py -i rep_seqs.fasta -o filtered_rep_seqs.fasta -s
 filtered_otu_table.txt
 
 filter_fasta.py -i RepSeqs_filteredfailedalignments.fa -o RepSeqs_filteredfailedalignments_filteredCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
+
+#is a fresh alignment needed?  Fresh alignment?  Is PD whole tree really calculated from the WHOLE TREE?
