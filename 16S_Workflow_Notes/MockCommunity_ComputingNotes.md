@@ -1266,9 +1266,20 @@ OTU_hdf5.biom: Hierarchical Data Format (version 5) data
 |Sum of craptaminent OTU relative abundances | :-------------: | :-------------: |-------------:|
 
 ### 11 July 2016
-* Found some contaminant chloroplast sequences; will have to rebuild OTU table at QIIME step
-filter_taxa_from_otu_table.py -i otu_table.biom -o otu_table_non_bac_firm.biom -n p__Bacteroidetes,p__Firmicutes
+* Found some chloroplast and mitochondria sequences; will have to rebuild OTU table at QIIME step
 ```
-filter_taxa_from_otu_table.py -i otu_table.biom -o otu_table_non_bac_firm.biom -n  c__Streptophyta, c__Chlorophyta
+#example from qiime
+filter_taxa_from_otu_table.py -i otu_table.biom -o otu_table_non_bac_firm.biom -n p__Bacteroidetes,p__Firmicutes
+
+#updated example for our groups
+filter_taxa_from_otu_table.py -i otu_table.biom -o otu_table_non_bac_f.biom -n  c__Streptophyta, c__Chloroplast, f_mitochondria
 ```
 This step should go before the collapsing and rarefaction, but after assigning taxonomy.
+
+https://groups.google.com/forum/#!searchin/qiime-forum/filter$20from$20otu$20map/qiime-forum/tuzOnTFyJGo/LxBLH_15aTcJ
+
+#filter rep seqs fasta to remove chloroplasts and mitochondria
+filter_fasta.py -i rep_seqs.fasta -o filtered_rep_seqs.fasta -s
+filtered_otu_table.txt
+
+filter_fasta.py -i RepSeqs_filteredfailedalignments.fa -o RepSeqs_filteredfailedalignments_filteredCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom

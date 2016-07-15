@@ -1,4 +1,4 @@
-#Part 1:  Mock community analysis
+#Part 1:  Mock community sequence processing
 ### PATH to Mock community data from Centralia 2014 16S amplicons
 ```
 research/ShadeLab/Shade/20141230_16Stag_Centralia/20141230_B_16S_PE/Mock_Cmty_TCCTCTGTCGAC_L001_R*
@@ -71,7 +71,7 @@ java -jar $RDP_JAR_PATH/classifier.jar classify -c 0.5 -o mock_denoised_classifi
 ### Make a database of contaminant OTUs detected in mock community by removing real rep. OTU sequences (mock type stains) from `mock_denoised_NoChimeraRef_otus.fa`.  New db file is: `mock_craptaminant_OTU_db.fa`
 
 
-#Part 2.  Community analysis
+#Part 2.  Community sequence processing using USEARCH tools
 ### PATH to raw fastq (zipped) on ShadeLab HPCC research space
 
 ```
@@ -123,10 +123,10 @@ usearch -cluster_fast nosigs_uniques_combined_merged.fastq -centroids_fastq deno
 ## output file: denoised_nosigs_uniques_combined_merged.fastq
 ```
 
-### vi.  Remove sequences that match 100% to our craptaminant database
+### vi.  Remove sequences that match 100% to our craptaminant database (using closed-reference 100% OTU picking)
 
 ```
-usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -strand plus
+usearch -search_exact denoised_nosigs_uniques_combined_merged.fastq -db mock_craptaminant_OTU_db.fa -otus craptaminantOTUs_denoised_nosigs_uniques_combined_merged.fa -notmatchedfq nocrap_denoised_nosigs_uniques_combined_merged.fastq -matchedfq craptaminantSeqs_denoised_nosigs_uniques_combined_merged.fastq -strand plus
 
 
 ## output files:
@@ -145,7 +145,7 @@ usearch -usearch_global nocrap_denoised_nosigs_uniques_combined_merged.fastq -id
 ### gg_97_rep_set_matched.fa (gg 97_rep_set matches to our dataset - add to MASTER OTU rep. sequences)
 ```
 
-### vii.  De novo OTU picking using uclust:  cluster sequences at 97% identity (includes chimera checking with uparse)
+### vii.  De novo OTU picking using usearch cluster_otus:  cluster sequences at 97% identity (includes chimera checking with uparse) This step removes singletons.
 
 ```
 usearch -cluster_otus RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fastq -minsize 2 -otus DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa -relabel OTU_dn_ -uparseout DeNovoUclustResults_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.up
@@ -158,11 +158,87 @@ usearch -cluster_otus RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.
 ### viii.  Combine ref-based and de novo representative OTU sequences into one master OTU "db" file.
 
 ```
-cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa > MASTER_RepSeqs.fa
+cat gg_97_rep_set_matched.fa DeNovoUclustOTUs_RefNoMatch_nocrap_denoised_nosigs_uniques_combined_merged.fa > RepSeqs.fa
+
+## output files
+### RepSeqs.fa
 ```
 
 ### ix.  Map all sequences (pre-dereplication) back to OTU definitions using usearch_global.  Any sequences that do not hit the new OTU database are discarded.
 
 ```
-usearch -usearch_global combined_merged.fastq -db MASTER_RepSeqs.fa  -strand plus -id 0.97 -uc MASTER_OTU_map.uc -otutabout MASTER_OTU_table.txt -biomout MASTER_OTU_bm.biom
+usearch -usearch_global combined_merged.fastq -db RepSeqs.fa  -strand plus -id 0.97 -uc OTU_map.uc -otutabout OTU_table.txt -biomout OTU_jsn.biom
+
+## output files
+### OTU_jsn.biom (Biom OTU table)
+### OTU_table.txt (classic OTU table)
+```
+
+
+#Part 3:  Continued sequence processing in QIIME 1.9.1
+### i.  Convert jsn biom format to HD5 and add QIIME metadata
+```
+biom convert -i OTU_jsn.biom -o OTU_hdf5.biom --table-type="OTU table" --to-hdf5
+
+## output files
+### OTU_hdf5.biom
+```
+
+### ii.  Alignment against silva v123 and taxonomic assignment with RDP Classifier 2.2.  We chose silva because the alignment was higher quality; however, greengenes and silva alignments both resulted in similar proportions of failures
+```
+align_seqs.py -i RepSeqs.fa -t core_alignment_SILVA123.fasta -o qiime191_pynast_silva123/
+
+## output
+### /qiime191_pynast_silva123/RepSeqs_failures.fasta
+### /qiime191_pynast_silva123/RepSeqs_aligned.fasta
+### /qiime191_pynast_silva123/RepSeqs_log.txt
+```
+
+### iii. Filter failed alignments
+```
+#from OTU table
+filter_otus_from_otu_table.py -i OTU_hdf5.biom -o OTU_hdf5_filteredfailedalignments.biom -e qiime191_pynast_silva123/RepSeqs_failures.fasta
+
+#from RepSeqs file
+filter_fasta.py -f RepSeqs.fa -o RepSeqs_filteredfailedalignments.fa -a qiime191_pynast_silva123/RepSeqs_aligned.fasta
+
+## output files
+### OTU_hdf5_filteredfailedalignments.biom
+### RepSeqs_filteredfailedalignments.fa
+```
+
+### iv. Assign taxonomy using RDP Classifier 2.2 against gg 97 database v. 13.8
+
+```
+assign_taxonomy.py -i RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -t gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r gg_13_8_otus/rep_set/97_otus.fasta -o rdp_assigned_taxonomy22/
+
+#Add taxonomy as metadata to .biom table
+
+echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
+
+cat  templine.txt rdp_assigned_taxonomy22/RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt
+
+#source /mnt/research/ShadeLab/software/loadanaconda2.sh
+
+biom add-metadata -i OTU_hdf5_filteredfailedalignments.biom -o OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
+
+rm templine.txt
+
+## output files
+### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.log
+### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt
+### rdp_assigned_taxonomy/MASTER_RepSeqs_filteredfailedalignments_tax_assignment_header.txt
+### OTU_hdf5_filteredfailedalignments_rdp.biom
+```
+vi.  Filter chloroplast and mitochondria from OTU table and RepSeqs
+```
+#remove chloroplasts and mitochondria (keep cyanobacteria that are not chloroplasts)
+filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -n  c__Streptophyta, c__Chlorophyta, f_mitochondria
+
+#output otu table of just those groups to later remove/reference to alignment
+filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o ChloroMito.biom -p  c__Streptophyta, c__Chlorophyta, f_mitochondria
+
+#remove same sequences from RepSeqs file
+filter_fasta.py -i RepSeqs_filteredfailedalignments.fa -o RepSeqs_filteredfailedalignments_filteredCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
+
 ```

@@ -144,7 +144,7 @@ biom convert -i OTU_jsn.biom -o OTU_hdf5.biom --table-type="OTU table" --to-hdf5
 filter_otus_from_otu_table.py -i OTU_hdf5.biom -o OTU_hdf5_filteredfailedalignments.biom -e qiime191_pynast_silva123/RepSeqs_failures.fasta
 
 #filter failed alignments from RepSeqs file
-filter_fasta.py -f RepSeqs.fa -o MASTER_RepSeqs_filteredfailedalignments.fa -a qiime191_pynast_silva123/RepSeqs_aligned.fasta
+filter_fasta.py -f RepSeqs.fa -o RepSeqs_filteredfailedalignments.fa -a qiime191_pynast_silva123/RepSeqs_aligned.fasta
 
 ## output files
 ### /qiime191_pynast_silva123/RepSeqs_failures.fasta
@@ -152,7 +152,7 @@ filter_fasta.py -f RepSeqs.fa -o MASTER_RepSeqs_filteredfailedalignments.fa -a q
 ### /qiime191_pynast_silva123/RepSeqs_log.txt
 ### OTU_hdf5.biom
 ### OTU_hdf5_filteredfailedalignments.biom
-### MASTER_RepSeqs_filteredfailedalignments.fa
+### RepSeqs_filteredfailedalignments.fa
 
 ###xii.  Classify sequences using the RDP Classifier v. 2.0 with the greenegenes 97% OTU database v. 13.8; classifier re-training and assignment uses the QIIME v 1.9.1 workflow
 #use QIIME RDP Classifier 2.2 to assign taxonomy with greengenes database
@@ -160,16 +160,16 @@ filter_fasta.py -f RepSeqs.fa -o MASTER_RepSeqs_filteredfailedalignments.fa -a q
 
 #export RDP_JAR_PATH=/opt/software/QIIME/1.8.0--GCC-4.4.5/rdpclassifier-2.2-release/rdp_classifier-2.2.jar
 
-assign_taxonomy.py -i MASTER_RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -o rdp_assigned_taxonomy22/
+assign_taxonomy.py -i RepSeqs_filteredfailedalignments.fa -m rdp -c 0.8 -t /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -r /mnt/research/ShadeLab/SharedResources/gg_13_8_otus/rep_set/97_otus.fasta -o rdp_assigned_taxonomy22/
 
 #add taxonomy as metadata to hdf5 biom table
 echo "#OTUID"$'\t'"taxonomy"$'\t'"confidence" > templine.txt
 
-cat  templine.txt rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt
+cat  templine.txt rdp_assigned_taxonomy22/RepSeqs_filteredfailedalignments_tax_assignments.txt >> rdp_assigned_taxonomy22/RepSeqs_filteredfailedalignments_tax_assignments_header.txt
 
 #source /mnt/research/ShadeLab/software/loadanaconda2.sh
 
-biom add-metadata -i OTU_hdf5_filteredfailedalignments.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/MASTER_RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
+biom add-metadata -i OTU_hdf5_filteredfailedalignments.biom -o OTU_hdf5_filteredfailedalignments_rdp.biom --observation-metadata-fp rdp_assigned_taxonomy22/RepSeqs_filteredfailedalignments_tax_assignments_header.txt --sc-separated taxonomy --observation-header OTUID,taxonomy
 
 rm templine.txt
 
