@@ -181,13 +181,13 @@ rm templine.txt
 
 ### xii.  Filter chloroplast and mitochondria from OTU table and RepSeqs file
 #remove chloroplasts and mitochondria (keep cyanobacteria that are not chloroplasts)
-filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -n  c__Streptophyta,c__Chlorophyta,f_mitochondria
+filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -n o__Streptophyta,o__Chlorophyta,f__mitochondria
 
 #remove same Mito and Chloro sequences from RepSeqs file
-filter_fasta.py -f RepSeqs_filteredfailedalignments.fa -o MASTER_RepSeqs_filteredfailedalignments_filteredCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
+filter_fasta.py -f RepSeqs_filteredfailedalignments.fa -o MASTER_RepSeqs_filteredfailedalignments_rmCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
 
 ## output files
-### MASTER_RepSeqs_filteredfailedalignments_filteredCM.fa
+### MASTER_RepSeqs_filteredfailedalignments_rmdCM.fa
 ### OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
 
 
@@ -206,11 +206,11 @@ single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -o OTU_
 
 collapse_samples.py -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -m Centralia_Full_Map.txt --output_biom_fp OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom --output_mapping_fp Centralia_Collapsed_Map.txt --collapse_mode sum --collapse_fields Sample
 
-#subsample to include mock community
+#subsample to omit mock community
 single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom -o MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -d 321000
 
-#subsample to omit mock community
-single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom -o OTU_hdf5_filteredfailedalignments_rdp_collapse_even321000.biom -d 321000
+#subsample to include mock community
+single_rarefaction.py -i OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse.biom -o OTU_hdf5_filteredfailedalignments_rdp_collapse_even321000.biom -d 227100
 
 #rarefaction analysis on collapsed dataset
 alpha_rarefaction.py -i MASTER_OTU_hdf5_filteredfailedalignments_rdp_rmCM_collapse_even321000.biom -m Centralia_Collapsed_Map.txt -a -n 15 -o alpha_rarefaction_collapsed/ -t MASTER_RepSeqs_aligned_clean.tre

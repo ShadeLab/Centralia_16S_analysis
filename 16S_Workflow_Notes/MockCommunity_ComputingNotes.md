@@ -1284,4 +1284,14 @@ filtered_otu_table.txt
 
 filter_fasta.py -i RepSeqs_filteredfailedalignments.fa -o RepSeqs_filteredfailedalignments_filteredCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
 
-#is a fresh alignment needed?  Fresh alignment?  Is PD whole tree really calculated from the WHOLE TREE?
+#is a fresh alignment needed? Is PD whole tree really calculated from the WHOLE TREE? Thought this makes tree building longer (more computing, extra sequences) to include those sequences, it may not matter for calculating UniFrac and PD because these only include tips of tree in calculation that are in the OTU table.  Does it make a better tree?
+#output otu table of just those groups to later remove/reference to alignment
+```
+#here is example code for keeping the OTU IDs
+filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o ChloroMito.biom -n  c__Streptophyta, c__Chlorophyta, f_mitochondria
+```
+# think we have it now. job submitted will start 16jul2016
+#update 25 Jul 2016 - did not work because there were TWO spaces between -n and list of taxa, but no error message
+#update #2 - only mitochondria were filtered bc Strepto and Chloro are o__, not c__,
+#results:  original Rep sequences (no filtering) = 28,902; filtered = 28,555 = lost ~400 OTUs by filtering
+# this should especialyl impact one fire-affected site that for some reason had a lot of chloroplasts.

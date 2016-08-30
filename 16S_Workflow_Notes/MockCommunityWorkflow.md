@@ -234,7 +234,7 @@ rm templine.txt
 ### vi.  Filter chloroplast and mitochondria from OTU table and RepSeqs file
 ```
 #remove chloroplasts and mitochondria (keep cyanobacteria that are not chloroplasts)
-filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -n  c__Streptophyta,c__Chlorophyta,f_mitochondria
+filter_taxa_from_otu_table.py -i OTU_hdf5_filteredfailedalignments_rdp.biom -o OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom -n c__Streptophyta,c__Chlorophyta,f__mitochondria
 
 #remove same Mito and Chloro sequences from RepSeqs file
 filter_fasta.py -f RepSeqs_filteredfailedalignments.fa -o MASTER_RepSeqs_filteredfailedalignments_filteredCM.fa -b OTU_hdf5_filteredfailedalignments_rdp_rmCM.biom
